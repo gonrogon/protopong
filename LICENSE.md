@@ -1,12 +1,8 @@
-================================================================================
-Proto Pong
---------------------------------------------------------------------------------
+# Proto Pong
+
 Proto Pong can be distributed and/or modified under the terms of the MIT
 License.
 
-================================================================================
-The MIT License
---------------------------------------------------------------------------------
 Copyright (c) 2015 - 2016 Gonzalo González Romero
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,16 +23,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-================================================================================
-External Libraries
---------------------------------------------------------------------------------
+## External Libraries
 
- * SDL2: Licensed under zlib license.
-   Website: https://www.libsdl.org
+* SDL2: Licensed under zlib license.\
+  https://www.libsdl.org
    
- * GLM: Licensed under The Happy Bunny License (Modified MIT License).
-   Website: https://glm.g-truc.net/0.9.9/index.html
+* GLM: Licensed under The Happy Bunny License (Modified MIT License).\
+  https://glm.g-truc.net/0.9.9/index.html
    
- * GLEW: Licensed under the Modified BSD License, the Mesa 3-D License (MIT)
-   and the Khronos License (MIT).
-   Website: http://glew.sourceforge.net
+* GLEW: Licensed under the Modified BSD License, the Mesa 3-D License (MIT) and the Khronos License (MIT).\
+  http://glew.sourceforge.net
