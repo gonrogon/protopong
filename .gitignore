@@ -1,0 +1,8 @@
+# IDE files.
+**/.idea
+# Build directories.
+cmake-build*
+build*
+# Project configuration header.
+src/Project.hpp
+

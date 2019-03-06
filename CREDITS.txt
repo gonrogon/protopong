@@ -1,0 +1,8 @@
+Proto Pong credits:
+
+* This game uses the sound from "freesound.org":
+    - "pongblipG#4.wav" by NoiseCollector (http://www.freesound.org/people/NoiseCollector).
+
+Thanks!
+
+Gonzalo González Romero
