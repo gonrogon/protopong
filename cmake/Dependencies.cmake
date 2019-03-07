@@ -1,3 +1,5 @@
+include(FetchContent)
+# Options.
 set(PROTOPONG_DEPS_IMPORT_MODE "directory" CACHE STRING "Mode to get the project dependencies")
 set(PROTOPONG_DEPS_IMPORT_DIR "" CACHE PATH "Location of the dependencies import directory")
 set(PROTOPONG_DEPS_BUILD_MODE "Release" CACHE STRING "Mode to build the project dependencies")
@@ -9,13 +11,13 @@ set_property(CACHE PROTOPONG_DEPS_BUILD_MODE  PROPERTY STRINGS "Release" "Debug"
 # Dependencies loaded from a directory.
 # ---
 if (PROTOPONG_DEPS_IMPORT_MODE STREQUAL "directory")
-    if (IS_DIRECTORY "${PROTOPONG_DEPENDENCIES_DIR}")
+    if (IS_DIRECTORY "${PROTOPONG_DEPS_IMPORT_DIR}")
         message(STATUS "o---------------------------o")
         message(STATUS "| Load project dependencies |")
         message(STATUS "o---------------------------o")
         message(STATUS "Loading dependencies from: ${PROTOPONG_DEPS_IMPORT_DIR}")
         
-        set(PROTOPONG_PREFIXES "${PROTOPONG_PREFIXES}" "${PROTOPONG_DEPS_IMPORT_DIR}")
+        set(PROTOPONG_PREFIXES "${PROTOPONG_DEPS_IMPORT_DIR}")
     else()
         message(FATAL_ERROR "A valid path to the directory from where to import dependencies must be specified or leave the project build the dependencies automatically.")
     endif()
@@ -31,12 +33,13 @@ if (PROTOPONG_DEPS_IMPORT_MODE STREQUAL "build")
     set(DEPS_SOURCE  "${CMAKE_CURRENT_BINARY_DIR}/deps")
     set(DEPS_INSTALL "${CMAKE_CURRENT_BINARY_DIR}/deps-install")
     
-    set(PROTOPONG_PREFIXES "${PROTOPONG_PREFIXES}" "${DEPS_INSTALL}")
+    set(PROTOPONG_PREFIXES "${DEPS_INSTALL}")
     # Download the project.
     FetchContent_Declare(protopong-deps
         DOWNLOAD_DIR   ${DOWNLOAD_DIR}
         SOURCE_DIR     ${DEPS_SOURCE}
-        GIT_REPOSITORY ${PROTOPONG_DEPS_REPOSITORY}
+		URL "D:/protopong-deps-master.zip"
+        #GIT_REPOSITORY ${PROTOPONG_DEPS_REPOSITORY}
     )
     FetchContent_GetProperties(protopong-deps)
     if (NOT protopong-deps_POPULATED)
@@ -59,13 +62,12 @@ if (PROTOPONG_DEPS_IMPORT_MODE STREQUAL "build")
     # Configure.
     execute_process(COMMAND ${CMAKE_COMMAND}
         -DCMAKE_INSTALL_PREFIX=${DEPS_INSTALL}
-        -DCMAKE_BUILD_TYPE=${PROTOPONG_DEPS_BUILD_MODE}
         ${DEPS_CONFIG_OPTIONS}
         ${DEPS_SOURCE}
         WORKING_DIRECTORY ${DEPS_BINARY}
     )
     # Build.
-    execute_process(COMMAND ${CMAKE_COMMAND} --build ${DEPS_BINARY})   
+    execute_process(COMMAND ${CMAKE_COMMAND} --build ${DEPS_BINARY} --config Release)   
 endif()
 
 message(STATUS "o--------------------------o")
