@@ -54,32 +54,32 @@ public:
     /**
      * @return Position.
      */
-    const glm::vec2& position() const;
+    const glm::vec2& position() const { return mPosition; }
 
     /**
      * @return Size.
      */
-    const glm::vec2& size() const;
+    const glm::vec2& size() const { return mSize; }
 
     /**
      * @return Left limit.
      */
-    float left() const;
+    float left() const { return mPosition.x - mSize.x * 0.5f; }
 
     /**
      * @return Right limit.
      */
-    float right() const;
+    float right() const { return mPosition.x + mSize.x * 0.5f; }
 
     /**
      * @return Top limit.
      */
-    float top() const;
+    float top() const { return mPosition.y + mSize.y * 0.5f; }
 
     /**
      * @return Bottom limit.
      */
-    float bottom() const;
+    float bottom() const { return mPosition.y - mSize.y * 0.5f; }
 
     void draw(float dt, float interp, Renderer& renderer) override;
 

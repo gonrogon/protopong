@@ -21,87 +21,21 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 ///
-/// @file   src/Renderer.cpp
+/// @file   src/RendererGL2.cpp
 /// @date   2015-11-02
 /// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "RendererGL2.hpp"
+#include "data/Shader.hpp"
 #include <GL/glew.h>
 #include <iostream>
 #include <cstring>
 
 ////////////////////////////////////////////////////////////
-// Data
-////////////////////////////////////////////////////////////
 
 namespace pong {
-namespace data {
-
-////////////////////////////////////////////////////////////
-
-/*
- * Vertex shader.
- */
-const char* vssGL2 = R"(
-#version 120
-
-in vec2 v_position;
-
-uniform mat4 transform;
-uniform vec2 size;
-uniform vec2 position;
-uniform vec4 color;
-
-varying vec4 vss_color;
-
-void main()
-{
-    gl_Position = vec4(v_position * size + position, 0.0, 1.0) * transform;
-    vss_color   = color;
-}
-)";
-
-////////////////////////////////////////////////////////////
-
-/*
- * Fragment shader.
- */
-const char* fssGL2 = R"(
-#version 120
-
-in vec4 vss_color;
-
-void main()
-{
-    gl_FragColor = vss_color;
-}
-)";
-
-////////////////////////////////////////////////////////////
-
-/*
- * Quad vertices.
- */
-const float quad[12] =
-{
-    -0.5f,  0.5f,
-    -0.5f, -0.5f,
-     0.5f,  0.5f,
-     0.5f,  0.5f,
-    -0.5f, -0.5f,
-     0.5f, -0.5f
-};
-
-////////////////////////////////////////////////////////////
-
-} // namespace data
-
-////////////////////////////////////////////////////////////
-// Helpers
-////////////////////////////////////////////////////////////
-
-namespace {
+namespace      {
 
 ////////////////////////////////////////////////////////////
 
@@ -156,7 +90,18 @@ bool checkErrors();
 } // namespace
 
 ////////////////////////////////////////////////////////////
-// Renderer
+
+struct RendererGL2::Quad
+{
+    glm::vec2 mSize;     //!< Size.
+    glm::vec2 mPosition; //!< Position.
+    glm::vec4 mColor;    //!< Color.
+};
+
+////////////////////////////////////////////////////////////
+
+RendererGL2::RendererGL2() = default;
+
 ////////////////////////////////////////////////////////////
 
 bool RendererGL2::init(unsigned int screenWidth, unsigned int screenHeight)
@@ -260,7 +205,7 @@ bool createQuadVBO(GLuint& id)
     glGenBuffers(1, &id);
     glBindBuffer(GL_ARRAY_BUFFER, id);
     // Update the data.
-    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), data::quad, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), data::Shader::Quad, GL_STATIC_DRAW);
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     // Done.
@@ -273,13 +218,13 @@ bool createProgram(GLuint& id)
 {
     clearErrors();
     // Sources.
-    const GLchar* vssrc[1] = {data::vssGL2};
-    const GLchar* fssrc[1] = {data::fssGL2};
+    const GLchar* vssrc[1] = {data::Shader::GL2_vs};
+    const GLchar* fssrc[1] = {data::Shader::GL2_fs};
     // Create the vertex and frame shader programs.
     const GLuint vsid = glCreateShader(GL_VERTEX_SHADER);
     const GLuint fsid = glCreateShader(GL_FRAGMENT_SHADER);
-    auto  vslen = static_cast<GLint>(std::strlen(data::vssGL2));
-    auto  fslen = static_cast<GLint>(std::strlen(data::fssGL2));
+    auto  vslen = static_cast<GLint>(std::strlen(data::Shader::GL2_vs));
+    auto  fslen = static_cast<GLint>(std::strlen(data::Shader::GL2_fs));
     GLint status1 = 0;
     GLint status2 = 0;
     // Sources.
@@ -339,7 +284,7 @@ void printShaderLog(const GLuint id, const char* name)
 
     if (loglen > 0)
     {
-        std::vector<GLchar> log(loglen);
+        std::vector<GLchar> log(static_cast<unsigned int>(loglen));
 
         glGetShaderInfoLog(id, loglen, &loglen, log.data());
 
@@ -358,7 +303,7 @@ void printProgramLog(const GLuint id, const char* name)
 
     if (loglen > 0)
     {
-        std::vector<GLchar> log(loglen);
+        std::vector<GLchar> log(static_cast<unsigned int>(loglen));
 
         glGetProgramInfoLog(id, loglen, &loglen, log.data());
 

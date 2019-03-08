@@ -34,27 +34,6 @@ namespace pong {
 
 ////////////////////////////////////////////////////////////
 
-Event::Event(const Type type)
-    :
-    mType(type)
-{}
-
-////////////////////////////////////////////////////////////
-
-Event::Type Event::type() const
-{
-    return mType;
-}
-
-////////////////////////////////////////////////////////////
-
-bool Event::is(const Type type) const
-{
-    return mType == type;
-}
-
-////////////////////////////////////////////////////////////
-
 bool Event::isPlayerA() const
 {
     return mType == Type::PlayerAMoveUp   || mType == Type::PlayerAMoveUpReleased ||

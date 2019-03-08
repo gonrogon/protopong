@@ -76,10 +76,20 @@ void ControllerHuman::handle(const Event& event)
 
 void ControllerHuman::update(Paddle& paddle, const Table& table, const Ball& ball, const float dt)
 {
-    if (mSpeed > 0) { paddle.moveUp();   } else
-    if (mSpeed < 0) { paddle.moveDown(); } else
+    if (mSpeed > 0)
     {
-        paddle.stop();
+        paddle.moveUp();
+    }
+    else
+    {
+        if (mSpeed < 0)
+        {
+            paddle.moveDown();
+        }
+        else
+        {
+            paddle.stop();
+        }
     }
 }
 

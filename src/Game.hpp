@@ -68,13 +68,14 @@ private:
      */
     enum class State
     {
-        Start = 0, //!< Game start.
-        Main  = 1, //!< Main menu.
-        Match = 2, //!< Match running.
-        Win   = 3, //!< The match is over.
-        Abort = 4, //!< Abort match.
-        Done  = 5, //!< Finished.
-        Help  = 6, //!< Help.
+        Start   = 0, //!< Game start.
+        Main    = 1, //!< Main menu.
+        Match   = 2, //!< Match running.
+        Win     = 3, //!< The match is over.
+        Abort   = 4, //!< Abort match.
+        Done    = 5, //!< Finished.
+        Help    = 6, //!< Help.
+        Kickoff = 7  //!< Kickoff.
     };
 
 public:
@@ -92,19 +93,14 @@ public:
     Game(const Game&) = delete;
 
     /**
-     * @brief Assignment operator (copy).
-     */
-    Game& operator=(const Game&) = delete;
-
-    /**
      * @return Audio system.
      */
-    Audio& audio();
+    Audio& audio() { return mAudio; }
 
     /**
      * @return True if the game has finished; otherwise, false.
      */
-    bool done() const;
+    bool done() const { return mState == State::Done; }
 
     /**
      * @brief Handle an event.
@@ -152,6 +148,8 @@ private:
      * @brief Set up the scene for the abort screen.
      */
     void setupAbort();
+
+    void setupKickoff();
 
     /**
      * @brief Set up the scene for the help screen.

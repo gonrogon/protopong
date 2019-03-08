@@ -21,7 +21,7 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 ///
-/// @file   src/Renderer.hpp
+/// @file   src/RendererGL3.hpp
 /// @date   2015-11-02
 /// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
@@ -47,12 +47,7 @@ private:
     /**
      * @brief Define a quad.
      */
-    struct Quad
-    {
-        glm::vec2 mSize;     //!< Size.
-        glm::vec2 mPosition; //!< Position.
-        glm::vec4 mColor;    //!< Color.
-    };
+    struct Quad;
 
     /**
      * @brief Define a type for a list of quads.
@@ -64,7 +59,7 @@ public:
     /**
      * @brief Constructor.
      */
-    RendererGL3() = default;
+    RendererGL3();
 
     bool init(unsigned int screenWidth, unsigned int screenHeight) override;
 
@@ -105,7 +100,7 @@ private:
     unsigned int mProgram = 0;
 
     /** @brief Projection matrix. */
-    glm::mat4 mProjection;
+    glm::mat4 mProjection = glm::mat4(1.0f);
 
     /** @brief List of quad to draw. */
     Quads mQuads;

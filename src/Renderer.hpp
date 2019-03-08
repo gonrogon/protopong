@@ -61,11 +61,6 @@ public:
     Renderer(const Renderer&) = delete;
 
     /**
-     * @brief Assignment operator (copy).
-     */
-    Renderer& operator=(const Renderer&) = delete;
-
-    /**
      * @brief Initialize the renderer.
      *
      * @param screenWidth Screen width.

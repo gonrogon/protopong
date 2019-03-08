@@ -32,7 +32,7 @@
 #include "Scene.hpp"
 #include "Table.hpp"
 #include "Ball.hpp"
-#include "RendererGL3.hpp"
+#include "Renderer.hpp"
 
 ////////////////////////////////////////////////////////////
 
@@ -51,37 +51,10 @@ Paddle::Paddle(Controller* controller, const glm::vec2& position, const glm::vec
 
 ////////////////////////////////////////////////////////////
 
-const glm::vec2& Paddle::size() const
+void Paddle::setPosition(const glm::vec2 &position)
 {
-    return mSize;
-}
-
-////////////////////////////////////////////////////////////
-
-const glm::vec2& Paddle::position() const
-{
-    return mPosition;
-}
-
-////////////////////////////////////////////////////////////
-
-float Paddle::top() const
-{
-    return mPosition.y + mSize.y;
-}
-
-////////////////////////////////////////////////////////////
-
-float Paddle::bottom() const
-{
-    return mPosition.y - mSize.y;
-}
-
-////////////////////////////////////////////////////////////
-
-float Paddle::speed() const
-{
-    return mSpeed;
+    mPosition     = position;
+    mPositionPrev = position;
 }
 
 ////////////////////////////////////////////////////////////
@@ -130,8 +103,8 @@ void Paddle::handle(const Event& event)
 
 void Paddle::update(const float dt)
 {
-    Table& table = static_cast<Table&>(scene().at(mTable));
-    Ball&  ball  = static_cast<Ball&> (scene().at(mBall));
+    auto& table = static_cast<Table&>(scene().at(mTable));
+    auto&  ball = static_cast<Ball&> (scene().at(mBall));
 
     mController->update(*this, table, ball, dt);
 

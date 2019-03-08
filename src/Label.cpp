@@ -29,7 +29,7 @@
 #include "Label.hpp"
 #include "data/Char.hpp"
 #include "lib/utf8d.hpp"
-#include "RendererGL3.hpp"
+#include "Renderer.hpp"
 
 ////////////////////////////////////////////////////////////
 
@@ -44,56 +44,14 @@ Label::Label(const float width, const glm::vec2 position, const glm::vec4& color
     mPosition(position),
     mColor   (color),
     mText    (std::move(text))
-{ }
-
-////////////////////////////////////////////////////////////
-
-Label::HAlign Label::hAlign() const
-{
-    return mHAlign;
-}
-
-////////////////////////////////////////////////////////////
-
-void Label::setHAlign(const HAlign h)
-{
-    mHAlign = h;
-}
-
-////////////////////////////////////////////////////////////
-
-Label::VAlign Label::vAlign() const
-{
-    return mVAlign;
-}
-
-////////////////////////////////////////////////////////////
-
-void Label::setVAlign(const VAlign v)
-{
-    mVAlign = v;
-}
+{}
 
 ////////////////////////////////////////////////////////////
 
 void Label::setAlign(const HAlign h, const VAlign v)
 {
-    mHAlign = h;
-    mVAlign = v;
-}
-
-////////////////////////////////////////////////////////////
-
-const std::string& Label::text() const
-{
-    return mText;
-}
-
-////////////////////////////////////////////////////////////
-
-void Label::setText(std::string text)
-{
-    mText = std::move(text);
+    setHAlign(h);
+    setVAlign(v);
 }
 
 ////////////////////////////////////////////////////////////

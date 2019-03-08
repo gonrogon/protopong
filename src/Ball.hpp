@@ -75,52 +75,52 @@ public:
     /**
      * @return Position.
      */
-    const glm::vec2& position() const;
+    const glm::vec2& position() const { return mPosition; }
 
     /**
      * @return Radius.
      */
-    float radius() const;
+    float radius() const { return mRadius; }
 
     /**
      * @return X-coordinate of the left side of the ball.
      */
-    float left() const;
+    float left() const { return mPosition.x - mRadius; }
 
     /**
      * @return X-coordinate of the right side of the ball.
      */
-    float right() const;
+    float right() const { return mPosition.x + mRadius; }
 
     /**
      * @return Y-coordinate of the top of the ball.
      */
-    float top() const;
+    float top() const { return mPosition.y + mRadius; }
 
     /**
      * @return Y-coordinate of the bottom of the ball.
      */
-    float bottom() const;
+    float bottom() const { return mPosition.y - mRadius; }
 
     /**
      * @return Speed.
      */
-    const glm::vec2& speed() const;
+    const glm::vec2& speed() const { return mSpeed; }
 
     /**
      * @return True if paddle A or B has scored a point; otherwise, false.
      */
-    bool point() const;
+    bool point() const { return mPoint == Point::A || mPoint == Point::B; }
 
     /**
      * @return True if paddle A has scored a point; otherwise, false.
      */
-    bool pointPaddleA() const;
+    bool pointPaddleA() const { return mPoint == Point::A; }
 
     /**
      * @return True if paddle B has scored a point; otherwise, false.
      */
-    bool pointPaddleB() const;
+    bool pointPaddleB() const { return mPoint == Point::B; }
 
     /**
      * @brief Reset the ball.

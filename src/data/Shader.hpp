@@ -21,77 +21,47 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 ///
-/// @file   src/Scene.cpp
+/// @file   src/data/Shader.hpp
 /// @date   2015-11-02
 /// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
-#include "Scene.hpp"
-#include "Entity.hpp"
+#pragma once
 
 ////////////////////////////////////////////////////////////
 
-namespace pong {
+namespace pong  {
+namespace data  {
 
 ////////////////////////////////////////////////////////////
-
-Scene::Scene(Game& game)
-    :
-    mGame(game)
-{}
-
+/// @brief Define a class that contains the sound data.
 ////////////////////////////////////////////////////////////
-
-Scene::~Scene()
+class Shader
 {
-    clear();
-}
+public:
+
+    /** @brief Array with the vertices of a quad. */
+    static const float Quad[12];
+
+    /** @brief OpenGL 2 vertex shader. */
+    static const char* GL2_vs;
+
+    /** @brief OpenGL 2 fragment shader. */
+    static const char* GL2_fs;
+
+    /** @brief OpenGL 3 vertex shader. */
+    static const char* GL3_vs;
+
+    /** @brief OpenGL 3 fragment shader. */
+    static const char* GL3_fs;
+
+    /**
+     * @brief Constructor.
+     */
+    Shader() = delete;
+};
 
 ////////////////////////////////////////////////////////////
 
-Entity& Scene::at(const int i)
-{
-    return *mEntities.at(static_cast<Entities::size_type >(i));
-}
-
-////////////////////////////////////////////////////////////
-
-int Scene::append(Entity* entity)
-{
-    entity->setScene(*this);
-
-    mEntities.emplace_back(entity);
-
-    return static_cast<int>(mEntities.size() - 1);
-}
-
-////////////////////////////////////////////////////////////
-
-void Scene::clear()
-{
-    mEntities.clear();
-}
-
-////////////////////////////////////////////////////////////
-
-void Scene::update(const float dt)
-{
-    for (auto& ptr : mEntities)
-    {
-        ptr->update(dt);
-    }
-}
-
-////////////////////////////////////////////////////////////
-
-void Scene::draw(const float dt, const float interp, Renderer& renderer)
-{
-    for (auto& ptr : mEntities)
-    {
-        ptr->draw(dt, interp, renderer);
-    }
-}
-
-////////////////////////////////////////////////////////////
-
+} // namespace data
 } // namespace pong

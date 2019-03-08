@@ -1,19 +1,8 @@
 # Dependencies.
-find_package(OpenGL REQUIRED)
-#find_package(sdl2   REQUIRED)
-find_package(SDL2   REQUIRED CONFIG)
-find_package(glew   REQUIRED CONFIG)
-find_package(glm    REQUIRED CONFIG)
-# Imported interfaces.
-add_library(opengl INTERFACE IMPORTED)
-set_property(TARGET opengl PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${OPENGL_INCLUDE_DIR})
-set_property(TARGET opengl PROPERTY INTERFACE_LINK_LIBRARIES      ${OPENGL_gl_LIBRARY})
-#add_library(sdl2 INTERFACE IMPORTED)
-#if (SDL2_FOUND AND WIN32)
-#	list(APPEND SDL2_LIBRARY user32 gdi32 winmm imm32 ole32 oleaut32 version uuid)
-#endif()
-#set_property(TARGET sdl2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIR})
-#set_property(TARGET sdl2 PROPERTY INTERFACE_LINK_LIBRARIES      ${SDL2_LIBRARY})
+find_package(OpenGL 	REQUIRED)
+find_package(SDL2 2.0.6 REQUIRED CONFIG)
+find_package(glew   	REQUIRED CONFIG)
+find_package(glm    	REQUIRED CONFIG)
 # Configuration.
 configure_file("Project.hpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/Project.hpp")
 # Sources.
@@ -56,6 +45,8 @@ set(SOURCES
     "data/Char.hpp"
     "data/Sound.cpp"
     "data/Sound.hpp"
+	"data/Shader.cpp"
+	"data/Shader.hpp"
     "lib/utf8d.cpp"
     "lib/utf8d.hpp"
 )
@@ -86,20 +77,20 @@ target_compile_options(protopong
         $<$<CONFIG:Release>:${FLAGS_CXX_RELEASE}>
         $<$<CONFIG:RelWithDebInfo>:${FLAGS_CXX_RELWITHDEBINFO}>
 )
+# Libraries.
+target_link_libraries(protopong
+	PRIVATE
+		GLEW::GLEW
+		OpenGL::GL
+		SDL2::SDL2
+		$<$<BOOL:WIN32>:SDL2main>
+		glm
+)
 # Properties.
 set_target_properties(protopong
     PROPERTIES
         INSTALL_RPATH "../lib;lib"
         INSTALL_RPATH_USE_LINK_PATH FALSE
-)
-# Libraries.
-target_link_libraries(protopong
-    PUBLIC
-		GLEW::GLEW
-        opengl
-		SDL2::SDL2
-		SDL2::SDL2main
-        glm
 )
 # Install.
 install(TARGETS protopong

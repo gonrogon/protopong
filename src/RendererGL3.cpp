@@ -21,88 +21,21 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 ///
-/// @file   src/Renderer.cpp
+/// @file   src/RendererGL3.cpp
 /// @date   2015-11-02
 /// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "RendererGL3.hpp"
+#include "data/Shader.hpp"
 #include <GL/glew.h>
 #include <iostream>
 #include <cstring>
 
 ////////////////////////////////////////////////////////////
-// Data
-////////////////////////////////////////////////////////////
 
 namespace pong {
-namespace data {
-
-////////////////////////////////////////////////////////////
-
-/*
- * Vertex shader.
- */
-const char* vssGL3 = R"(
-#version 330 core
-
-layout(location = 0) in vec2 v_position;
-
-uniform mat4 transform;
-uniform vec2 size;
-uniform vec2 position;
-uniform vec4 color;
-
-out vec4 vss_color;
-
-void main()
-{
-    gl_Position = vec4(v_position * size + position, 0.0, 1.0) * transform;
-    vss_color   = color;
-}
-)";
-
-////////////////////////////////////////////////////////////
-
-/*
- * Fragment shader.
- */
-const char* fssGL3 = R"(
-#version 330 core
-
-in  vec4 vss_color;
-out vec4 fragColor;
-
-void main()
-{
-    fragColor = vss_color;
-}
-)";
-
-////////////////////////////////////////////////////////////
-
-/*
- * Quad vertices.
- */
-const float quad[12] =
-{
-    -0.5f,  0.5f,
-    -0.5f, -0.5f,
-     0.5f,  0.5f,
-     0.5f,  0.5f,
-    -0.5f, -0.5f,
-     0.5f, -0.5f
-};
-
-////////////////////////////////////////////////////////////
-
-} // namespace data
-
-////////////////////////////////////////////////////////////
-// Helpers
-////////////////////////////////////////////////////////////
-
-namespace {
+namespace      {
 
 ////////////////////////////////////////////////////////////
 
@@ -167,7 +100,18 @@ bool checkErrors();
 } // namespace
 
 ////////////////////////////////////////////////////////////
-// Renderer
+
+struct RendererGL3::Quad
+{
+    glm::vec2 mSize;     //!< Size.
+    glm::vec2 mPosition; //!< Position.
+    glm::vec4 mColor;    //!< Color.
+};
+
+////////////////////////////////////////////////////////////
+
+RendererGL3::RendererGL3() = default;
+
 ////////////////////////////////////////////////////////////
 
 bool RendererGL3::init(unsigned int screenWidth, unsigned int screenHeight)
@@ -265,7 +209,7 @@ bool createQuadVBO(GLuint& id)
     glGenBuffers(1, &id);
     glBindBuffer(GL_ARRAY_BUFFER, id);
     // Update the data.
-    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), data::quad, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), data::Shader::Quad, GL_STATIC_DRAW);
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     // Done.
@@ -298,13 +242,13 @@ bool createProgram(GLuint& id)
 {
     clearErrors();
     // Sources.
-    const GLchar* vssrc[1] = {data::vssGL3};
-    const GLchar* fssrc[1] = {data::fssGL3};
+    const GLchar* vssrc[1] = {data::Shader::GL3_vs};
+    const GLchar* fssrc[1] = {data::Shader::GL3_fs};
     // Create the vertex and frame shader programs.
     const GLuint vsid = glCreateShader(GL_VERTEX_SHADER);
     const GLuint fsid = glCreateShader(GL_FRAGMENT_SHADER);
-    auto  vslen = static_cast<GLint>(std::strlen(data::vssGL3));
-    auto  fslen = static_cast<GLint>(std::strlen(data::fssGL3));
+    auto  vslen = static_cast<GLint>(std::strlen(data::Shader::GL3_vs));
+    auto  fslen = static_cast<GLint>(std::strlen(data::Shader::GL3_fs));
     GLint status1 = 0;
     GLint status2 = 0;
     // Sources.
@@ -364,7 +308,7 @@ void printShaderLog(const GLuint id, const char* name)
 
     if (loglen > 0)
     {
-        std::vector<GLchar> log(loglen);
+        std::vector<GLchar> log(static_cast<unsigned int>(loglen));
 
         glGetShaderInfoLog(id, loglen, &loglen, log.data());
 
@@ -383,7 +327,7 @@ void printProgramLog(const GLuint id, const char* name)
 
     if (loglen > 0)
     {
-        std::vector<GLchar> log(loglen);
+        std::vector<GLchar> log(static_cast<unsigned int>(loglen));
 
         glGetProgramInfoLog(id, loglen, &loglen, log.data());
 

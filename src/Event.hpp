@@ -76,17 +76,17 @@ public:
      *
      * @param type Type of event.
      */
-    explicit Event(Type type);
+    explicit Event(Type type) : mType(type) {}
 
     /**
      * @return Type.
      */
-    Type type() const;
+    Type type() const { return mType; }
 
     /**
      * @return True if it is an event of the requested type; otherwise, false.
      */
-    bool is(Type type) const;
+    bool is(Type type) const { return mType == type; }
 
     /**
      * @return True if it is an event for player A; otherwise, false.

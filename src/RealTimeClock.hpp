@@ -57,11 +57,6 @@ public:
     RealTimeClock(const RealTimeClock&) = delete;
 
     /**
-     * @brief Assignment operator (copy).
-     */
-    RealTimeClock& operator =(const RealTimeClock&) = delete;
-
-    /**
      * @return Time elapsed since the last restart, in seconds.
      */
     double elapsed() const;

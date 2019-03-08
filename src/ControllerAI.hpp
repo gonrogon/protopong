@@ -54,6 +54,12 @@ public:
 
 private:
 
+    /** @brief Flag indicating whether it is the first call to update or not. */
+    bool mFirst = true;
+
+    /** @brief Flag indicating whether to fall back to center of the table or not. */
+    bool mBack = false;
+
     /** @brief Y-coordinate to reach. */
     float mTarget = 0.0f;
 

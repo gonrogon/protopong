@@ -39,13 +39,11 @@ namespace pong {
 
 void ControllerAI::update(Paddle& paddle, const Table& table, const Ball& ball, const float dt)
 {
-    static bool first = true;
-    static bool back  = false;
     // First update, go to the center of the table.
-    if (first)
+    if (mFirst)
     {
         mTarget = table.position().y;
-        first   = false;
+        mFirst  = false;
     }
     // If enough time has elapsed since the last update, the target is recalculated.
     if (mTime > 0.3f)
@@ -54,9 +52,9 @@ void ControllerAI::update(Paddle& paddle, const Table& table, const Ball& ball, 
         // Calculate the target position in order to hit the ball when it reaches the paddle.
         if (ball.speed().x < 0)
         {
-                  back = false;
-            float t    = (paddle.position().x - ball.position().x) / ball.speed().x;
-            float y    = ball.position().y + ball.speed().y * t;
+            mBack   = false;
+            float t = (paddle.position().x - ball.position().x) / ball.speed().x;
+            float y = ball.position().y + ball.speed().y * t;
             // Update the target (with some error) only if the paddle is not already on it (with some error).
             if (y < mTarget - 1.0f || y > mTarget + 1.0f )
             {
@@ -74,10 +72,10 @@ void ControllerAI::update(Paddle& paddle, const Table& table, const Ball& ball, 
         // position to fall back to the center of the table (with some error).
         else
         {
-            if (!back)
+            if (!mBack)
             {
                 mTarget = table.position().y + glm::linearRand(-table.size().y * 0.1f, table.size().y * 0.1f);
-                back    = true;
+                mBack   = true;
             }
         }
     }

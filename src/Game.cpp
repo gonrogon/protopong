@@ -35,7 +35,7 @@
 #include "Table.hpp"
 #include "ControllerHuman.hpp"
 #include "ControllerAI.hpp"
-#include "RendererGL3.hpp"
+#include "Renderer.hpp"
 
 ////////////////////////////////////////////////////////////
 
@@ -61,26 +61,12 @@ Game::Game(Audio& audio)
 
 ////////////////////////////////////////////////////////////
 
-Audio& Game::audio()
-{
-    return mAudio;
-}
-
-////////////////////////////////////////////////////////////
-
-bool Game::done() const
-{
-    return mState == State::Done;
-}
-
-////////////////////////////////////////////////////////////
-
 void Game::handle(const Event& event)
 {
     // Movement events are send always to the paddles.
     if (mPaddleA >= 0 && event.isPlayerA()) { mSceneMatch.at(mPaddleA).handle(event); }
     if (mPaddleB >= 0 && event.isPlayerB()) { mSceneMatch.at(mPaddleB).handle(event); }
-    // Handle the states.
+
     switch (mState)
     {
         // Main menu.
@@ -171,6 +157,17 @@ void Game::handle(const Event& event)
             }
         }
         break;
+        // Kickoff message:
+        case State::Kickoff:
+        {
+            if (event.is(Event::Type::Next) || event.is(Event::Type::Quit))
+            {
+                mState = State::Match;
+
+                clearMenus();
+            }
+        }
+        break;
         // Help menu.
         case State::Help:
         {
@@ -192,11 +189,10 @@ void Game::handle(const Event& event)
 
 void Game::update(const float dt)
 {
-    // The initial state changes automatically.
+    // The initial state changes automatically to main.
     if (mState == State::Start)
     {
         mState = State::Main;
-
         setupMain();
     }
     // Update the scene for the match if a match is up and running.
@@ -218,6 +214,9 @@ void Game::update(const float dt)
             else
             {
                 scorePoints();
+
+                mState = State::Kickoff;
+                setupKickoff();
             }
         }
     }
@@ -278,9 +277,9 @@ void Game::setupMatch(int players)
         cb = new ControllerAI();
     }
 
-    Paddle* const paddleA = new Paddle(ca, {tbl->right() - 10.0f, tbl->position().y}, {5.0f, 30.0f});
-    Paddle* const paddleB = new Paddle(cb, {tbl->left()  + 10.0f, tbl->position().y}, {5.0f, 30.0f});
-    Ball*   const ball    = new Ball  (tbl->position(), 2.5f);
+    auto paddleA = new Paddle(ca, {tbl->right() - 10.0f, tbl->position().y}, {5.0f, 30.0f});
+    auto paddleB = new Paddle(cb, {tbl->left()  + 10.0f, tbl->position().y}, {5.0f, 30.0f});
+    auto ball    = new Ball  (tbl->position(), 2.5f);
 
     mPaddleA = mSceneMatch.append(paddleA);
     mPaddleB = mSceneMatch.append(paddleB);
@@ -295,7 +294,7 @@ void Game::setupMatch(int players)
 
 void Game::setupWin()
 {
-    Table& table = static_cast<Table&>(mSceneMatch.at(mTable));
+    auto&  table = static_cast<Table&>(mSceneMatch.at(mTable));
     Label* lbl1  = nullptr;
     Label* lbl2  = nullptr;
 
@@ -318,10 +317,18 @@ void Game::setupWin()
 
 void Game::setupAbort()
 {
-    Table& table = static_cast<Table&>(mSceneMatch.at(mTable));
+    auto& table = static_cast<Table&>(mSceneMatch.at(mTable));
 
     mSceneMenus.append(new Label(5.0f, {0.0f, table.position().y + 7.5f}, ColorRed, "Are you sure you want to quit?"));
     mSceneMenus.append(new Label(5.0f, {0.0f, table.position().y - 7.5f}, ColorRed, "(Y)es  (N)o"));
+}
+
+void Game::setupKickoff()
+{
+    auto& table = static_cast<Table&>(mSceneMatch.at(mTable));
+
+    mSceneMenus.append(new Label(5.0f, {0.0f, table.top()    - 20}, ColorBlue, "Press (space) to kickoff"));
+    mSceneMenus.append(new Label(5.0f, {0.0f, table.bottom() + 20}, ColorBlue, "Press (space) to kickoff"));
 }
 
 ////////////////////////////////////////////////////////////
@@ -329,25 +336,34 @@ void Game::setupAbort()
 void Game::setupHelp()
 {
     mSceneMenus.append(new Label(10.0f, {0.0f,  60.0f}, ColorBlue,  "Controls"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f,  20.0f}, ColorWhite, "Right player:"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f,   5.0f}, ColorWhite, "(up arrow) move up, (down arrow) move down"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -10.0f}, ColorWhite, "Left player:"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -25.0f}, ColorWhite, "(w) move up, (s) move down"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -60.0f}, ColorWhite, "Press (ESC) to return"));
+    mSceneMenus.append(new Label( 5.0f, {0.0f,  20.0f}, ColorGray,  "Right player:"));
+    mSceneMenus.append(new Label( 5.0f, {0.0f,  10.0f}, ColorWhite, "(up arrow) move up, (down arrow) move down"));
+    mSceneMenus.append(new Label( 5.0f, {0.0f, - 5.0f}, ColorGray,  "Left player:"));
+    mSceneMenus.append(new Label( 5.0f, {0.0f, -15.0f}, ColorWhite, "(w) move up, (s) move down"));
+    mSceneMenus.append(new Label( 5.0f, {0.0f, -30.0f}, ColorGray,  "Both players:"));
+    mSceneMenus.append(new Label( 5.0f, {0.0f, -40.0f}, ColorWhite, "(space) kickoff"));
+    mSceneMenus.append(new Label( 5.0f, {0.0f, -80.0f}, ColorWhite, "Press (ESC) to return"));
 }
 
 ////////////////////////////////////////////////////////////
 
 void Game::scorePoints()
 {
-    Table& table = static_cast<Table&>(mSceneMatch.at(mTable));
-    Ball&  ball  = static_cast<Ball&> (mSceneMatch.at(mBall));
+    auto& table   = static_cast<Table&> (mSceneMatch.at(mTable));
+    auto& ball    = static_cast<Ball&>  (mSceneMatch.at(mBall));
+    auto& paddleA = static_cast<Paddle&>(mSceneMatch.at(mPaddleA));
+    auto& paddleB = static_cast<Paddle&>(mSceneMatch.at(mPaddleB));
 
     static_cast<Label&>(mSceneMatch.at(mLabelScoreA)).setText(std::to_string(mScoreA));
     static_cast<Label&>(mSceneMatch.at(mLabelScoreB)).setText(std::to_string(mScoreB));
 
     if (ball.pointPaddleA()) { ball.reset(table.position(),  InitialSpeed); }
     if (ball.pointPaddleB()) { ball.reset(table.position(), -InitialSpeed); }
+
+    paddleA.setPosition({table.right() - 10.0f, table.position().y});
+    paddleA.stop();
+    paddleB.setPosition({table.left()  + 10.0f, table.position().y});
+    paddleB.stop();
 }
 
 ////////////////////////////////////////////////////////////

@@ -63,10 +63,7 @@ protected:
      *
      * @param type Type of entity.
      */
-    explicit Entity(Type type)
-        :
-        mType(type)
-    {}
+    explicit Entity(Type type) : mType(type) {}
 
 public:
 
@@ -81,25 +78,14 @@ public:
     virtual ~Entity() = default;
 
     /**
-     * @brief Assignment operator (copy).
-     */
-    Entity& operator=(const Entity&) = delete;
-
-    /**
      * @return Type of entity.
      */
-    Type type() const
-    {
-        return mType;
-    }
+    Type type() const { return mType; }
 
     /**
      * @return Read/write reference to the scene.
      */
-    Scene& scene() const
-    {
-        return *mScene;
-    }
+    Scene& scene() const { return *mScene; }
 
     /**
      * @brief Set the scene that contains this entity.
@@ -108,10 +94,7 @@ public:
      *
      * @param scene Scene to set.
      */
-    void setScene(Scene& scene)
-    {
-        mScene = &scene;
-    }
+    void setScene(Scene& scene) { mScene = &scene; }
 
     /**
      * @brief Handle an event.

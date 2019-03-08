@@ -64,6 +64,7 @@ private:
      *     {x-origin, y-origin, width, height}
      * Example for letter "o":
      *     {4, 7, 0, 1, 2, 5, 1, 0, 5, 1, 5, 1, 2, 5, 1, 6, 5, 1}
+     *      n  w |^ QUAD 1 ^||^ QUAD 2 ^||^ QUAD 3 ^||^ QUAD 4 ^|
      */
     static const unsigned char Glyphs[43][42];
 

@@ -53,7 +53,7 @@ public:
      * @brief Constructor.
      *
      * @param controller Controller.
-     * @param position   Position.
+     * @param position   Initial position.
      * @param size       Size.
      */
     Paddle(Controller* controller, const glm::vec2& position, const glm::vec2& size);
@@ -61,40 +61,32 @@ public:
     /**
      * @return Position.
      */
-    const glm::vec2& position() const;
+    const glm::vec2& position() const { return mPosition; }
 
     /**
-     * @return Position of the top of the ball.
+     * @brief Set the position.
+     *
+     * @param position Position.
      */
-    float top() const;
-
-    /**
-     * @return Position of the bottom of the ball.
-     */
-    float bottom() const;
+    void setPosition(const glm::vec2& position);
 
     /**
      * @return Size.
      */
-    const glm::vec2& size() const;
+    const glm::vec2& size() const { return mSize; }
 
     /**
-     * @return Speed.
-     */
-    float speed() const;
-
-    /**
-     * @brief Move up the paddle.
+     * @brief Set the speed of the paddle to move up.
      */
     void moveUp();
 
     /**
-     * @brief Move down the paddle.
+     * @brief Set the speed of the paddle to move down.
      */
     void moveDown();
 
     /**
-     * @brief Stop the paddle.
+     * @brief Set the speed of the paddle to zero.
      */
     void stop();
 
@@ -110,7 +102,7 @@ public:
 
     void update(float dt) override;
 
-    void draw(float dt, float interp, Renderer& renderer);
+    void draw(float dt, float interp, Renderer& renderer) override;
 
 private:
 

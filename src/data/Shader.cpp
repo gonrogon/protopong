@@ -21,77 +21,100 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 ///
-/// @file   src/Scene.cpp
+/// @file   src/data/Sound.cpp
 /// @date   2015-11-02
 /// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
-#include "Scene.hpp"
-#include "Entity.hpp"
+#include "data/Shader.hpp"
 
 ////////////////////////////////////////////////////////////
 
 namespace pong {
+namespace data {
 
 ////////////////////////////////////////////////////////////
 
-Scene::Scene(Game& game)
-    :
-    mGame(game)
-{}
-
-////////////////////////////////////////////////////////////
-
-Scene::~Scene()
+const float Shader::Quad[] =
 {
-    clear();
-}
+    -0.5f,  0.5f,
+    -0.5f, -0.5f,
+     0.5f,  0.5f,
+     0.5f,  0.5f,
+    -0.5f, -0.5f,
+     0.5f, -0.5f
+};
 
 ////////////////////////////////////////////////////////////
 
-Entity& Scene::at(const int i)
+const char* Shader::GL2_vs = R"(
+#version 120
+
+in vec2 v_position;
+
+uniform mat4 transform;
+uniform vec2 size;
+uniform vec2 position;
+uniform vec4 color;
+
+varying vec4 vss_color;
+
+void main()
 {
-    return *mEntities.at(static_cast<Entities::size_type >(i));
+    gl_Position = vec4(v_position * size + position, 0.0, 1.0) * transform;
+    vss_color   = color;
 }
+)";
 
 ////////////////////////////////////////////////////////////
 
-int Scene::append(Entity* entity)
+const char* Shader::GL2_fs = R"(
+#version 120
+
+in vec4 vss_color;
+
+void main()
 {
-    entity->setScene(*this);
-
-    mEntities.emplace_back(entity);
-
-    return static_cast<int>(mEntities.size() - 1);
+    gl_FragColor = vss_color;
 }
+)";
 
 ////////////////////////////////////////////////////////////
 
-void Scene::clear()
+const char* Shader::GL3_vs = R"(
+#version 330 core
+
+layout(location = 0) in vec2 v_position;
+
+uniform mat4 transform;
+uniform vec2 size;
+uniform vec2 position;
+uniform vec4 color;
+
+out vec4 vss_color;
+
+void main()
 {
-    mEntities.clear();
+    gl_Position = vec4(v_position * size + position, 0.0, 1.0) * transform;
+    vss_color   = color;
 }
+)";
 
 ////////////////////////////////////////////////////////////
 
-void Scene::update(const float dt)
+const char* Shader::GL3_fs = R"(
+#version 330 core
+
+in  vec4 vss_color;
+out vec4 fragColor;
+
+void main()
 {
-    for (auto& ptr : mEntities)
-    {
-        ptr->update(dt);
-    }
+    fragColor = vss_color;
 }
+)";
 
 ////////////////////////////////////////////////////////////
 
-void Scene::draw(const float dt, const float interp, Renderer& renderer)
-{
-    for (auto& ptr : mEntities)
-    {
-        ptr->draw(dt, interp, renderer);
-    }
-}
-
-////////////////////////////////////////////////////////////
-
+} // namespace data
 } // namespace pong

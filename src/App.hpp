@@ -41,8 +41,8 @@ namespace pong {
 ////////////////////////////////////////////////////////////
 /// @brief Define an application.
 ///
-/// This class implements the main loop and creates the instances for each subsystem (render, audio and
-/// game). It also manages the queue with the events.
+/// This class implements the main loop and creates the instances for each subsystem (render, audio and game). It
+/// also manages the queue with the events.
 ////////////////////////////////////////////////////////////
 class App
 {
@@ -76,11 +76,6 @@ public:
      * @brief Destructor.
      */
     ~App();
-
-    /**
-     * @brief Assignment operator (copy).
-     */
-    App& operator=(const App&) = delete;
 
     /**
      * @brief Initialize the application.

@@ -59,11 +59,6 @@ public:
     virtual ~Controller() = default;
 
     /**
-     * @brief Assignment operator (copy).
-     */
-    Controller& operator=(const Controller&) = delete;
-
-    /**
      * @brief Handle an event.
      *
      * @param event Event to handle.

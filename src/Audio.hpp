@@ -85,11 +85,6 @@ public:
     ~Audio();
 
     /**
-     * @brief Assignment operator (copy).
-     */
-    Audio& operator=(const Audio&) = delete;
-
-    /**
      * @brief Initialize the audio system.
      *
      * @return True on success; otherwise, false.
@@ -131,7 +126,7 @@ private:
     DevicePtr mDevice;
 
     /** @brief The "pong" sound. */
-    SoundPtr  mSound;
+    SoundPtr mSound;
 
     /** @brief Flag indicating whether the audio system was initialized or not. */
     bool mError = false;

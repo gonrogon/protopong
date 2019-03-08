@@ -60,7 +60,7 @@ public:
      *
      * @param game Game.
      */
-    Scene(Game& game);
+    explicit Scene(Game& game);
 
     /**
      * @brief Constructor (copy).
@@ -73,14 +73,9 @@ public:
     ~Scene();
 
     /**
-     * @brief Assignment operator (copy).
-     */
-    Scene& operator =(const Scene&) = delete;
-
-    /**
      * @return Game.
      */
-    Game& game() const;
+    Game& game() const { return mGame; }
 
     /**
      * @brief Gets an entity.

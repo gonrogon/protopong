@@ -79,26 +79,26 @@ public:
     /**
      * @return Horizontal alignment.
      */
-    HAlign hAlign() const;
+    HAlign hAlign() const { return mHAlign; }
 
     /**
      * @brief Set the horizontal alignment.
      *
      * @param h Alignment to set.
      */
-    void setHAlign(HAlign h);
+    void setHAlign(HAlign h) { mHAlign = h; }
 
     /**
      * @return Vertical alignment.
      */
-    VAlign vAlign() const;
+    VAlign vAlign() const { return mVAlign; }
 
     /**
      * @brief Set the vertical alignment.
      *
      * @param v Alignment to set.
      */
-    void setVAlign(VAlign v);
+    void setVAlign(VAlign v) { mVAlign = v; }
 
     /**
      * @brief Set the horizontal and vertical alignment.
@@ -111,14 +111,14 @@ public:
     /**
      * @return Text.
      */
-    const std::string& text() const;
+    const std::string& text() const { return mText; }
 
     /**
      * @brief Set the text.
      *
      * @param text Text to set.
      */
-    void setText(std::string text);
+    void setText(std::string text) { mText = std::move(text); }
 
     void draw(float dt, float interp, Renderer& renderer) override;
 

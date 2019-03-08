@@ -33,7 +33,7 @@
 #include "Table.hpp"
 #include "Paddle.hpp"
 #include "Game.hpp"
-#include "RendererGL3.hpp"
+#include "Renderer.hpp"
 
 ////////////////////////////////////////////////////////////
 // Helpers
@@ -93,76 +93,6 @@ Ball::Ball(const glm::vec2& position, const float radius)
 
 ////////////////////////////////////////////////////////////
 
-const glm::vec2& Ball::position() const
-{
-    return mPosition;
-}
-
-////////////////////////////////////////////////////////////
-
-float Ball::radius() const
-{
-    return mRadius;
-}
-
-////////////////////////////////////////////////////////////
-
-float Ball::left() const
-{
-    return mPosition.x - mRadius;
-}
-
-////////////////////////////////////////////////////////////
-
-float Ball::right() const
-{
-    return mPosition.x + mRadius;
-}
-
-////////////////////////////////////////////////////////////
-
-float Ball::top() const
-{
-    return mPosition.y + mRadius;
-}
-
-////////////////////////////////////////////////////////////
-
-float Ball::bottom() const
-{
-    return mPosition.y - mRadius;
-}
-
-////////////////////////////////////////////////////////////
-
-const glm::vec2& Ball::speed() const
-{
-    return mSpeed;
-}
-
-////////////////////////////////////////////////////////////
-
-bool Ball::point() const
-{
-    return mPoint == Point::A || mPoint == Point::B;
-}
-
-////////////////////////////////////////////////////////////
-
-bool Ball::pointPaddleA() const
-{
-    return mPoint == Point::A;
-}
-
-////////////////////////////////////////////////////////////
-
-bool Ball::pointPaddleB() const
-{
-    return mPoint == Point::B;
-}
-
-////////////////////////////////////////////////////////////
-
 void Ball::reset(const glm::vec2& position, const float speed)
 {
     mPosition     = position;
@@ -214,7 +144,7 @@ void Ball::update(const float dt)
     // If there was a collision with the paddles.
     if (ca || cb)
     {
-        float rdist;
+        float rdist; // Relative distance.
         float speed = glm::length(mSpeed);
         float sign  = glm::sign(mSpeed.x);
         // There was a collision, so play the collision sound.
@@ -271,26 +201,24 @@ bool collision(const Ball& ball, const Paddle& paddle, glm::vec2& where)
     // Add the ball radius to the paddle radius.
     const float radii = glm::length(paddle.size() * 0.5f) + ball.radius();
     // Check if the paddle is close enough to collide with the ball. This calculation is faster than circle/segment
-    // intersection and, if there is a collision, it is limited to the segment of the paddle.
+    // intersection and if there is a collision, it is limited to the segment of the paddle.
     if (glm::length2(paddle.position() - ball.position()) > (radii * radii))
     {
         return false;
     }
     // Calculate the intersection between the ball and the paddle front line.
     if (collisionCircleLine(ball.position(), ball.radius(),
-        {paddle.position().x - paddle.size().x * 0.5f, paddle.position().y - paddle.size().y * 0.5f},
-        {paddle.position().x - paddle.size().x * 0.5f, paddle.position().y + paddle.size().y * 0.5f},
-        where
-    ))
+            {paddle.position().x - paddle.size().x * 0.5f, paddle.position().y - paddle.size().y * 0.5f},
+            {paddle.position().x - paddle.size().x * 0.5f, paddle.position().y + paddle.size().y * 0.5f},
+            where))
     {
         return true;
     }
-    // Calculate the intersection between the ball and the paddle front line.
+    // Calculate the intersection between the ball and the paddle back line.
     if (collisionCircleLine(ball.position(), ball.radius(),
-        {paddle.position().x + paddle.size().x * 0.5f, paddle.position().y - paddle.size().y * 0.5f},
-        {paddle.position().x + paddle.size().x * 0.5f, paddle.position().y + paddle.size().y * 0.5f},
-        where
-    ))
+            {paddle.position().x + paddle.size().x * 0.5f, paddle.position().y - paddle.size().y * 0.5f},
+            {paddle.position().x + paddle.size().x * 0.5f, paddle.position().y + paddle.size().y * 0.5f},
+            where))
     {
         return true;
     }
