@@ -3,7 +3,7 @@
 Proto Pong can be distributed and/or modified under the terms of the MIT
 License.
 
-Copyright (c) 2015 - 2016 Gonzalo González Romero
+Copyright (c) 2015 - 2016 gonrogon
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,3 @@ THE SOFTWARE.
    
 * GLM: Licensed under The Happy Bunny License (Modified MIT License).\
   https://glm.g-truc.net/0.9.9/index.html
-   
-* GLEW: Licensed under the Modified BSD License, the Mesa 3-D License (MIT) and the Khronos License (MIT).\
-  http://glew.sourceforge.net

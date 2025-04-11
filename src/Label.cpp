@@ -28,8 +28,8 @@
 
 #include "Label.hpp"
 #include "data/Char.hpp"
-#include "lib/utf8d.hpp"
 #include "Renderer.hpp"
+#include <utf8d/utf8d.hpp>
 
 ////////////////////////////////////////////////////////////
 

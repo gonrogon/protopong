@@ -1,54 +1,29 @@
 # Dependencies.
-find_package(OpenGL 	REQUIRED)
-find_package(SDL2 2.0.6 REQUIRED CONFIG)
-find_package(glew   	REQUIRED CONFIG)
-find_package(glm    	REQUIRED CONFIG)
+find_package(OpenGL REQUIRED)
+find_package(SDL2 REQUIRED CONFIG)
+find_package(glm REQUIRED CONFIG)
 # Configuration.
 configure_file("Project.hpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/Project.hpp")
 # Sources.
 set(SOURCES
     "App.cpp"
-    "App.hpp"
     "Audio.cpp"
-    "Audio.hpp"
     "Ball.cpp"
-    "Ball.hpp"
     "Main.cpp"
-    "Project.hpp"
-    "Controller.hpp"
     "ControllerAI.cpp"
-    "ControllerAI.hpp"
     "ControllerHuman.cpp"
-    "ControllerHuman.hpp"
-    "Entity.hpp"
     "Event.cpp"
-    "Event.hpp"
     "Game.cpp"
-    "Game.hpp"
     "Label.cpp"
-    "Label.hpp"
     "Paddle.cpp"
-    "Paddle.hpp"
     "RealTimeClock.cpp"
-    "RealTimeClock.hpp"
-    "Renderer.hpp"
     "RendererGL2.cpp"
-    "RendererGL2.hpp"
     "RendererGL3.cpp"
-    "RendererGL3.hpp"
-    "Require.hpp"
     "Scene.cpp"
-    "Scene.hpp"
     "Table.cpp"
-    "Table.hpp"
     "data/Char.cpp"
-    "data/Char.hpp"
     "data/Sound.cpp"
-    "data/Sound.hpp"
 	"data/Shader.cpp"
-	"data/Shader.hpp"
-    "lib/utf8d.cpp"
-    "lib/utf8d.hpp"
 )
 # Add the executable.
 add_executable(protopong WIN32 ${SOURCES})
@@ -79,12 +54,13 @@ target_compile_options(protopong
 )
 # Libraries.
 target_link_libraries(protopong
-	PRIVATE
-		GLEW::GLEW
+	PRIVATE      
 		OpenGL::GL
+        glad
 		SDL2::SDL2
 		$<$<BOOL:WIN32>:SDL2main>
-		glm
+		glm::glm
+        utf8d
 )
 # Properties.
 set_target_properties(protopong
@@ -116,6 +92,6 @@ endif()
 # Install the game data.
 if (PONG_INSTALL_DATA)
     if (NOT PONG_INSTALL_PACKAGE)
-            install(FILES "${CMAKE_SOURCE_DIR}/Credits.txt" DESTINATION .)
+            install(FILES "${CMAKE_SOURCE_DIR}/CREDITS.txt" DESTINATION .)
     endif()
 endif()

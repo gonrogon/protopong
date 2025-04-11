@@ -28,7 +28,8 @@
 
 #include "RendererGL3.hpp"
 #include "data/Shader.hpp"
-#include <GL/glew.h>
+//#include <GL/glew.h>
+#include <glad/glad.h>
 #include <iostream>
 #include <cstring>
 

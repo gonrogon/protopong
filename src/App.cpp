@@ -34,7 +34,8 @@
 #include "RealTimeClock.hpp"
 #include "RendererGL3.hpp"
 #include "RendererGL2.hpp"
-#include <GL/glew.h>
+//#include <GL/glew.h>
+#include <glad/glad.h>
 #include <SDL.h>
 #include <iostream>
 #include <cstring>
@@ -157,10 +158,16 @@ bool App::init(int argc, char** argv)
     // Hide the mouse cursor because it is not required.
     SDL_ShowCursor(SDL_DISABLE);
     // Try to initialize GLEW.
+    /*
     glewExperimental = GL_TRUE;
     if (glewInit()  != GLEW_OK)
     {
         std::cerr << "Unable to initialize GLEW" << std::endl;
+        return false;
+    }
+    */
+    if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
+        std::cerr << "Unable to initialize GLAD" << std::endl;
         return false;
     }
     // Try to initialize the renderer.
