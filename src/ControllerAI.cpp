@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,69 +20,85 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/ControllerAI.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "ControllerAI.hpp"
 #include "Table.hpp"
 #include "Paddle.hpp"
 #include "Ball.hpp"
-
-////////////////////////////////////////////////////////////
+#include <glm/gtc/random.hpp>
 
 namespace pong {
 
-////////////////////////////////////////////////////////////
-
 void ControllerAI::update(Paddle& paddle, const Table& table, const Ball& ball, const float dt)
 {
-    // First update, go to the center of the table.
+    // On the very first update, set the initial target to the table's center.
     if (mFirst)
     {
         mTarget = table.position().y;
         mFirst  = false;
     }
+    // Accumulate time since the last major logic update.
+    mTimeSinceTargetUpdate += dt;
     // If enough time has elapsed since the last update, the target is recalculated.
-    if (mTime > 0.3f)
+    if (mTimeSinceTargetUpdate > TargetUpdateInterval)
     {
-        mTime = 0.0f;
-        // Calculate the target position in order to hit the ball when it reaches the paddle.
-        if (ball.speed().x < 0)
+        mTimeSinceTargetUpdate = 0.0f;
+        updateTarget(paddle, table, ball);
+    }
+    // Move the paddle towards the current target in every frame.
+    moveTowardsTarget(paddle);
+}
+
+void ControllerAI::updateTarget(Paddle& paddle, const Table& table, const Ball& ball)
+{
+    bool isBallIncoming = false;
+    if (paddle.position().x < 0)
+    {
+        isBallIncoming = ball.speed().x < 0;
+    }
+    else
+    {
+        isBallIncoming = ball.speed().x > 0;
+    }
+
+    if (isBallIncoming) {
+        // The paddle is no longer in "return to center" mode.
+        mBack = false;
+        // Predict where the ball will be on the Y-axis when it reaches the paddle.
+        const float timeToImpact = (paddle.position().x - ball.position().x) / ball.speed().x;
+        const float predictedY = ball.position().y + ball.speed().y * timeToImpact;
+        // Only update the target if the new prediction is significantly different.
+        if (std::abs(predictedY - mTarget) > TargetDeadZone)
         {
-            mBack   = false;
-            float t = (paddle.position().x - ball.position().x) / ball.speed().x;
-            float y = ball.position().y + ball.speed().y * t;
-            // Update the target (with some error) only if the paddle is not already on it (with some error).
-            if (y < mTarget - 1.0f || y > mTarget + 1.0f )
+            // Add some random error to make the AI feel more human.
+            const float error = paddle.size().y * (HitPositionBase + glm::linearRand(-HitPositionError, HitPositionError));
+
+            if (predictedY < paddle.position().y)
             {
-                if (y < paddle.position().y)
-                {
-                    mTarget = y + paddle.size().y * (0.40f + glm::linearRand(-0.2f, 0.2f));
-                }
-                else
-                {
-                    mTarget = y - paddle.size().y * (0.40f + glm::linearRand(-0.2f, 0.2f));
-                }
+                mTarget = predictedY + error;
             }
-        }
-        // If the ball moves away and the paddle is not moving to the center of the table, recalculate the target
-        // position to fall back to the center of the table (with some error).
-        else
-        {
-            if (!mBack)
+            else
             {
-                mTarget = table.position().y + glm::linearRand(-table.size().y * 0.1f, table.size().y * 0.1f);
-                mBack   = true;
+                mTarget = predictedY - error;
             }
         }
     }
-    // Accumulated time.
-    mTime += dt;
-    // Move to the target.
-    if (paddle.position().y < mTarget - 1.0f || paddle.position().y > mTarget + 1.0f)
+    else
+    {
+        if (!mBack)
+        {
+            const float error = table.size().y * ReturnPositionErrorFactor;
+            mTarget = table.position().y + glm::linearRand(-error, error);
+            mBack   = true;
+        }
+    }
+}
+
+void ControllerAI::moveTowardsTarget(Paddle& paddle)
+{
+    // Move towards the target, but stop if we are within the dead zone to prevent jitter.
+    if (std::abs(paddle.position().y - mTarget) > TargetDeadZone)
     {
         if (paddle.position().y < mTarget)
         {
@@ -98,7 +114,5 @@ void ControllerAI::update(Paddle& paddle, const Table& table, const Ball& ball, 
         paddle.stop();
     }
 }
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

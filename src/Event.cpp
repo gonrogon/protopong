@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,34 +20,38 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Event.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "Event.hpp"
 
-////////////////////////////////////////////////////////////
-
 namespace pong {
 
-////////////////////////////////////////////////////////////
-
-bool Event::isPlayerA() const
+bool Event::isPlayerA() const noexcept
 {
-    return mType == Type::PlayerAMoveUp   || mType == Type::PlayerAMoveUpReleased ||
-           mType == Type::PlayerAMoveDown || mType == Type::PlayerAMoveDownReleased;
+    switch (mType)
+    {
+        case Type::PlayerAMoveUp:
+        case Type::PlayerAMoveUpReleased:
+        case Type::PlayerAMoveDown:
+        case Type::PlayerAMoveDownReleased:
+            return true;
+        default:
+            return false;
+    }
 }
 
-////////////////////////////////////////////////////////////
-
-bool Event::isPlayerB() const
+bool Event::isPlayerB() const noexcept
 {
-    return mType == Type::PlayerBMoveUp   || mType == Type::PlayerBMoveUpReleased ||
-           mType == Type::PlayerBMoveDown || mType == Type::PlayerBMoveDownReleased;
+    switch (mType)
+    {
+        case Type::PlayerBMoveUp:
+        case Type::PlayerBMoveUpReleased:
+        case Type::PlayerBMoveDown:
+        case Type::PlayerBMoveDownReleased:
+            return true;
+        default:
+            return false;
+    }
 }
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

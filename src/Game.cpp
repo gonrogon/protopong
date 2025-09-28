@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,6 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Game.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "Game.hpp"
@@ -35,22 +31,9 @@
 #include "Table.hpp"
 #include "ControllerHuman.hpp"
 #include "ControllerAI.hpp"
-#include "Renderer.hpp"
-
-////////////////////////////////////////////////////////////
+#include "Project.hpp"
 
 namespace pong {
-
-////////////////////////////////////////////////////////////
-
-const int       Game::MaxPoints    = 10;
-const float     Game::InitialSpeed = 100.0f;
-const glm::vec4 Game::ColorWhite   = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-const glm::vec4 Game::ColorBlue    = glm::vec4(0.5f, 0.8f, 1.0f, 1.0f);
-const glm::vec4 Game::ColorRed     = glm::vec4(1.0f, 0.3f, 0.3f, 1.0f);
-const glm::vec4 Game::ColorGray    = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
-
-////////////////////////////////////////////////////////////
 
 Game::Game(Audio& audio)
     :
@@ -59,13 +42,11 @@ Game::Game(Audio& audio)
     mSceneMatch (*this)
 {}
 
-////////////////////////////////////////////////////////////
-
 void Game::handle(const Event& event)
 {
     // Movement events are send always to the paddles.
-    if (mPaddleA >= 0 && event.isPlayerA()) { mSceneMatch.at(mPaddleA).handle(event); }
-    if (mPaddleB >= 0 && event.isPlayerB()) { mSceneMatch.at(mPaddleB).handle(event); }
+    if (mPaddleA && event.isPlayerA()) { mPaddleA->handle(event); }
+    if (mPaddleB && event.isPlayerB()) { mPaddleB->handle(event); }
 
     switch (mState)
     {
@@ -116,9 +97,9 @@ void Game::handle(const Event& event)
 
             if (event.is(Event::Type::Quit) || event.is(Event::Type::Minimize))
             {
-                if (mPaddleA >= 0) { mSceneMatch.at(mPaddleA).handle(Event{Event::Type::Pause}); }
-                if (mPaddleB >= 0) { mSceneMatch.at(mPaddleB).handle(Event{Event::Type::Pause}); }
-                if (mBall    >= 0) { mSceneMatch.at(mBall)   .handle(Event{Event::Type::Pause}); }
+                if (mPaddleA) { mPaddleA->handle(Event{Event::Type::Pause}); }
+                if (mPaddleB) { mPaddleB->handle(Event{Event::Type::Pause}); }
+                if (mBall)    { mBall   ->handle(Event{Event::Type::Pause}); }
 
                 mState = State::Abort;
 
@@ -185,9 +166,7 @@ void Game::handle(const Event& event)
     }
 }
 
-////////////////////////////////////////////////////////////
-
-void Game::update(const float dt)
+void Game::update(const RealTimeClock::Duration dt)
 {
     // The initial state changes automatically to main.
     if (mState == State::Start)
@@ -200,12 +179,10 @@ void Game::update(const float dt)
     {
         mSceneMatch.update(dt);
 
-        auto& ball = static_cast<Ball&>(mSceneMatch.at(mBall));
-
-        if (ball.point())
+        if (mBall->point())
         {
-            if (ball.pointPaddleA()) { ++mScoreA; }
-            if (ball.pointPaddleB()) { ++mScoreB; }
+            if (mBall->pointPaddleA()) { ++mScoreA; }
+            if (mBall->pointPaddleB()) { ++mScoreB; }
 
             if (mScoreA >= MaxPoints || mScoreB >= MaxPoints)
             {
@@ -224,166 +201,145 @@ void Game::update(const float dt)
     mSceneMenus.update(dt);
 }
 
-////////////////////////////////////////////////////////////
-
-void Game::draw(const float dt, const float interp, Renderer& renderer)
+void Game::draw(Renderer& renderer, const float interp)
 {
-    mSceneMatch.draw(dt, interp, renderer);
-    mSceneMenus.draw(dt, interp, renderer);
+    mSceneMatch.draw(renderer, interp);
+    mSceneMenus.draw(renderer, interp);
 }
-
-////////////////////////////////////////////////////////////
 
 void Game::setupMain()
 {
-    mSceneMenus.append(new Label(20.0f, {0.0f,  60.0f}, ColorBlue,  "PROTO"));
-    mSceneMenus.append(new Label(20.0f, {0.0f,  35.0f}, ColorBlue,  "PONG"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -20.0f}, ColorWhite, "Press (1) for single player"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -35.0f}, ColorWhite, "Press (2) for player vs player"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -50.0f}, ColorWhite, "Press (h) to view controls"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -65.0f}, ColorWhite, "Press (ESC) to exit"));
+    mSceneMenus.append(std::make_unique<Label>(20.0f, glm::vec2{0.0f,  60.0f}, ColorBlue,  "PROTO"));
+    mSceneMenus.append(std::make_unique<Label>(20.0f, glm::vec2{0.0f,  35.0f}, ColorBlue,  "PONG"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, -20.0f}, ColorWhite, "Press (1) for single player"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, -35.0f}, ColorWhite, "Press (2) for player vs player"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, -50.0f}, ColorWhite, "Press (h) to view controls"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, -65.0f}, ColorWhite, "Press (ESC) to exit"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, -90.0f}, ColorWhite, PONG_VERSION));
 }
 
-////////////////////////////////////////////////////////////
-
-void Game::setupMatch(int players)
+void Game::setupMatch(const int players)
 {
     mScoreA = 0;
     mScoreB = 0;
 
-    Table* const tbl = new Table(glm::vec2(0.0f, -10.0f), glm::vec2(200.0f, 140.0f));
+    auto table = std::make_unique<Table>(glm::vec2(0.0f, -10.0f), glm::vec2(200.0f, 140.0f));
 
-    float tCenter = 100.0f - (100.0f - tbl->top()) * 0.5f;
-    float lCenter = tbl->left () - 0.5f * (tbl->left () - tbl->position().x);
-    float rCenter = tbl->right() - 0.5f * (tbl->right() - tbl->position().x);
+    const float centerTop   = 100.0f - (100.0f - table->top()) * 0.5f;
+    const float centerLeft  = table->left () - 0.5f * (table->left () - table->position().x);
+    const float centerRight = table->right() - 0.5f * (table->right() - table->position().x);
 
-    Label* const lbA = new Label(15.0f, {rCenter, tCenter}, ColorWhite, std::to_string(mScoreA));
-    Label* const lbB = new Label(15.0f, {lCenter, tCenter}, ColorWhite, std::to_string(mScoreB));
+    auto labelA = std::make_unique<Label>(15.0f, glm::vec2{centerRight, centerTop}, ColorWhite, std::to_string(mScoreA));
+    auto labelB = std::make_unique<Label>(15.0f, glm::vec2{centerLeft,  centerTop}, ColorWhite, std::to_string(mScoreB));
 
-    mTable       = mSceneMatch.append(tbl);
-    mLabelScoreA = mSceneMatch.append(lbA);
-    mLabelScoreB = mSceneMatch.append(lbB);
-
-    Controller *ca, *cb;
+    std::unique_ptr<Controller> ca, cb;
 
     if (players >= 2)
     {
-        ca = new ControllerHuman();
-        cb = new ControllerHuman();
+        ca = std::make_unique<ControllerHuman>(ControllerHuman::Player::A);
+        cb = std::make_unique<ControllerHuman>(ControllerHuman::Player::B);
     }
     else
     {
-        ca = new ControllerHuman();
-        cb = new ControllerAI();
+        ca = std::make_unique<ControllerHuman>(ControllerHuman::Player::A);
+        cb = std::make_unique<ControllerAI>();
     }
 
-    auto paddleA = new Paddle(ca, {tbl->right() - 10.0f, tbl->position().y}, {5.0f, 30.0f});
-    auto paddleB = new Paddle(cb, {tbl->left()  + 10.0f, tbl->position().y}, {5.0f, 30.0f});
-    auto ball    = new Ball  (tbl->position(), 2.5f);
+    auto paddleA = std::make_unique<Paddle>(std::move(ca), glm::vec2{table->right() - 10.0f, table->position().y}, glm::vec2{5.0f, 30.0f});
+    auto paddleB = std::make_unique<Paddle>(std::move(cb), glm::vec2{table->left()  + 10.0f, table->position().y}, glm::vec2{5.0f, 30.0f});
+    auto ball    = std::make_unique<Ball>  (table->position(), 2.5f);
 
-    mPaddleA = mSceneMatch.append(paddleA);
-    mPaddleB = mSceneMatch.append(paddleB);
-    mBall    = mSceneMatch.append(ball);
-
-    paddleA->setup(mTable, mBall);
-    paddleB->setup(mTable, mBall);
-    ball   ->setup(mTable, mPaddleA, mPaddleB);
+    paddleA->setup(*table, *ball);
+    paddleB->setup(*table, *ball);
+    ball   ->setup(*table, *paddleA, *paddleB);
+    // A static analyzer may warn about "address of local variable escaping" here.
+    // This is a false positive. We are storing the raw pointer to a stable, heap-allocated object managed by a
+    // unique_ptr. When the unique_ptr is moved into the scene's vector, only the unique_ptr object itself is moved,
+    // not the underlying resource on the heap. The captured raw pointers remain valid regardless of reallocations.
+    mTable       = table.get();
+    mLabelScoreA = labelA.get();
+    mLabelScoreB = labelB.get();
+    mBall        = ball.get();
+    mPaddleA     = paddleA.get();
+    mPaddleB     = paddleB.get();
+    mSceneMatch.append(std::move(table));
+    mSceneMatch.append(std::move(labelA));
+    mSceneMatch.append(std::move(labelB));
+    mSceneMatch.append(std::move(ball));
+    mSceneMatch.append(std::move(paddleA));
+    mSceneMatch.append(std::move(paddleB));
 }
-
-////////////////////////////////////////////////////////////
 
 void Game::setupWin()
 {
-    auto&  table = static_cast<Table&>(mSceneMatch.at(mTable));
-    Label* lbl1  = nullptr;
-    Label* lbl2  = nullptr;
-
-    if (static_cast<Ball&>(mSceneMatch.at(mBall)).pointPaddleA())
+    std::unique_ptr<Label> label1;
+    if (mBall->pointPaddleA())
     {
-        lbl1 = new Label(5.0f, {0.0f, table.position().y + 7.5f}, ColorRed, "Right player won!!!");
+        label1 = std::make_unique<Label>(5.0f, glm::vec2{0.0f, mTable->position().y + 7.5f}, ColorRed, "Right player won!!!");
     }
     else
     {
-        lbl1 = new Label(5.0f, {0.0f, table.position().y + 7.5f}, ColorRed, "Left player won!!!");
+        label1 = std::make_unique<Label>(5.0f, glm::vec2{0.0f, mTable->position().y + 7.5f}, ColorRed, "Left player won!!!");
     }
+    auto label2 = std::make_unique<Label>(5.0f, glm::vec2{0.0f, mTable->position().y - 7.5f}, ColorRed, "Press (ESC) to exit");
 
-    lbl2 = new Label(5.0f, {0.0f, table.position().y - 7.5f}, ColorRed, "Press (ESC) to exit");
-
-    mSceneMenus.append(lbl1);
-    mSceneMenus.append(lbl2);
+    mSceneMenus.append(std::move(label1));
+    mSceneMenus.append(std::move(label2));
 }
-
-////////////////////////////////////////////////////////////
 
 void Game::setupAbort()
 {
-    auto& table = static_cast<Table&>(mSceneMatch.at(mTable));
-
-    mSceneMenus.append(new Label(5.0f, {0.0f, table.position().y + 7.5f}, ColorRed, "Are you sure you want to quit?"));
-    mSceneMenus.append(new Label(5.0f, {0.0f, table.position().y - 7.5f}, ColorRed, "(Y)es  (N)o"));
+    mSceneMenus.append(std::make_unique<Label>(5.0f, glm::vec2{0.0f, mTable->position().y + 7.5f}, ColorRed, "Are you sure you want to quit?"));
+    mSceneMenus.append(std::make_unique<Label>(5.0f, glm::vec2{0.0f, mTable->position().y - 7.5f}, ColorRed, "(Y)es  (N)o"));
 }
 
 void Game::setupKickoff()
 {
-    auto& table = static_cast<Table&>(mSceneMatch.at(mTable));
-
-    mSceneMenus.append(new Label(5.0f, {0.0f, table.top()    - 20}, ColorBlue, "Press (space) to kickoff"));
-    mSceneMenus.append(new Label(5.0f, {0.0f, table.bottom() + 20}, ColorBlue, "Press (space) to kickoff"));
+    mSceneMenus.append(std::make_unique<Label>(5.0f, glm::vec2{0.0f, mTable->top()    - 20}, ColorBlue, "Press (space) to kickoff"));
+    mSceneMenus.append(std::make_unique<Label>(5.0f, glm::vec2{0.0f, mTable->bottom() + 20}, ColorBlue, "Press (space) to kickoff"));
 }
-
-////////////////////////////////////////////////////////////
 
 void Game::setupHelp()
 {
-    mSceneMenus.append(new Label(10.0f, {0.0f,  60.0f}, ColorBlue,  "Controls"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f,  20.0f}, ColorGray,  "Right player:"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f,  10.0f}, ColorWhite, "(up arrow) move up, (down arrow) move down"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, - 5.0f}, ColorGray,  "Left player:"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -15.0f}, ColorWhite, "(w) move up, (s) move down"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -30.0f}, ColorGray,  "Both players:"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -40.0f}, ColorWhite, "(space) kickoff"));
-    mSceneMenus.append(new Label( 5.0f, {0.0f, -80.0f}, ColorWhite, "Press (ESC) to return"));
+    mSceneMenus.append(std::make_unique<Label>(10.0f, glm::vec2{0.0f,  60.0f}, ColorBlue,  "Controls"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f,  20.0f}, ColorGray,  "Right player:"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f,  10.0f}, ColorWhite, "(up arrow) move up, (down arrow) move down"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, - 5.0f}, ColorGray,  "Left player:"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, -15.0f}, ColorWhite, "(w) move up, (s) move down"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, -30.0f}, ColorGray,  "Both players:"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, -40.0f}, ColorWhite, "(space) kickoff"));
+    mSceneMenus.append(std::make_unique<Label>( 5.0f, glm::vec2{0.0f, -80.0f}, ColorWhite, "Press (ESC) to return"));
 }
-
-////////////////////////////////////////////////////////////
 
 void Game::scorePoints()
 {
-    auto& table   = static_cast<Table&> (mSceneMatch.at(mTable));
-    auto& ball    = static_cast<Ball&>  (mSceneMatch.at(mBall));
-    auto& paddleA = static_cast<Paddle&>(mSceneMatch.at(mPaddleA));
-    auto& paddleB = static_cast<Paddle&>(mSceneMatch.at(mPaddleB));
+    mLabelScoreA->setText(std::to_string(mScoreA));
+    mLabelScoreB->setText(std::to_string(mScoreB));
 
-    static_cast<Label&>(mSceneMatch.at(mLabelScoreA)).setText(std::to_string(mScoreA));
-    static_cast<Label&>(mSceneMatch.at(mLabelScoreB)).setText(std::to_string(mScoreB));
+    if (mBall->pointPaddleA()) { mBall->reset(mTable->position(),  InitialSpeed); }
+    if (mBall->pointPaddleB()) { mBall->reset(mTable->position(), -InitialSpeed); }
 
-    if (ball.pointPaddleA()) { ball.reset(table.position(),  InitialSpeed); }
-    if (ball.pointPaddleB()) { ball.reset(table.position(), -InitialSpeed); }
-
-    paddleA.setPosition({table.right() - 10.0f, table.position().y});
-    paddleA.stop();
-    paddleB.setPosition({table.left()  + 10.0f, table.position().y});
-    paddleB.stop();
+    mPaddleA->setPosition({mTable->right() - 10.0f, mTable->position().y});
+    mPaddleA->stop();
+    mPaddleB->setPosition({mTable->left()  + 10.0f, mTable->position().y});
+    mPaddleB->stop();
 }
-
-////////////////////////////////////////////////////////////
 
 void Game::clear()
 {
-    mPaddleA = -1;
-    mPaddleB = -1;
-
+    mPaddleA = nullptr;
+    mPaddleB = nullptr;
+    mBall = nullptr;
+    mTable = nullptr;
+    mLabelScoreA = nullptr;
+    mLabelScoreB = nullptr;
     mSceneMenus.clear();
     mSceneMatch.clear();
 }
-
-////////////////////////////////////////////////////////////
 
 void Game::clearMenus()
 {
     mSceneMenus.clear();
 }
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

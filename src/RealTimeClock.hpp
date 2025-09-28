@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,60 +20,55 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/RealTimeClock.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
-
-#include "Require.hpp"
-#include <SDL.h>
-
-////////////////////////////////////////////////////////////
+#include <chrono>
 
 namespace pong {
 
-////////////////////////////////////////////////////////////
-/// @brief Define a real time clock.
-////////////////////////////////////////////////////////////
+/**
+ * @brief Defines a real time clock for measuring elapsed time.
+ *
+ * This clock uses std::chrono for type-safe time measurements.
+ */
 class RealTimeClock
 {
 public:
 
+    using Clock = std::chrono::high_resolution_clock;
+
+    using TimePoint = std::chrono::time_point<Clock>;
+
+    using Duration = std::chrono::duration<double>;
+
     /**
      * @brief Constructor.
      *
-     * Restarts the clock.
+     * Starts the clock upon creation.
      */
-    RealTimeClock();
+    RealTimeClock() noexcept;
 
-    /**
-     * @brief Constructor (copy).
-     */
     RealTimeClock(const RealTimeClock&) = delete;
 
-    /**
-     * @return Time elapsed since the last restart, in seconds.
-     */
-    double elapsed() const;
+    RealTimeClock& operator=(const RealTimeClock&) = delete;
 
     /**
-     * @brief Restart the clock.
-     *
-     * @return Time elapsed since the last restart, in seconds.
+     * @return Time duration elapsed since the clock was started or last restarted.
      */
-    double restart();
+    [[nodiscard]] Duration elapsed() const noexcept;
+
+    /**
+     * @brief Restarts the clock.
+     * @return The duration that had elapsed before the restart.
+     */
+    Duration restart() noexcept;
 
 private:
 
     /** @brief Start time. */
-    Uint64 mStart = 0;
+    TimePoint mStart;
 };
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

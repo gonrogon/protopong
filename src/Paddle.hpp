@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,112 +20,115 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Paddle.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
-
 #include "Entity.hpp"
+#include <glm/glm.hpp>
 #include <memory>
-
-////////////////////////////////////////////////////////////
 
 namespace pong {
 
-////////////////////////////////////////////////////////////
-/// @brief Define an entity for the paddles.
-////////////////////////////////////////////////////////////
-class Paddle : public Entity
+class Controller;
+class Table;
+class Ball;
+
+/**
+ * @brief Represents a player's paddle entity.
+ *
+ * The Paddle is a core gameplay entity that moves vertically to hit the ball.
+ * Its behavior is determined by a `Controller` strategy, which can be either a human player or an AI. The Paddle must
+ * be linked to the `Table` and `Ball` after construction via the `setup()` method to resolve dependencies.
+ */
+class Paddle final : public Entity
 {
-private:
-
-    /** @brief Define a type for a unique pointer to controllers. */
-    typedef std::unique_ptr<Controller> ControllerPtr;
-
 public:
+
+    constexpr static float MovementSpeed = 120.0f;
 
     /**
      * @brief Constructor.
      *
-     * @param controller Controller.
-     * @param position   Initial position.
-     * @param size       Size.
+     * The paddle is created in a "disconnected" state. The `setup()` method must be called after creation to link it to
+     * other game entities.
+     * @param controller The control strategy (e.g., player or AI). Ownership is transferred to the paddle.
+     * @param position Initial center position of the paddle.
+     * @param size Width and height of the paddle.
      */
-    Paddle(Controller* controller, const glm::vec2& position, const glm::vec2& size);
+    Paddle(std::unique_ptr<Controller> controller, const glm::vec2& position, const glm::vec2& size);
 
     /**
+     * @brief Gets the current center position of the paddle.
      * @return Position.
      */
-    const glm::vec2& position() const { return mPosition; }
+    [[nodiscard]] const glm::vec2& position() const noexcept { return mPosition; }
 
     /**
-     * @brief Set the position.
-     *
+     * @brief Sets the position of the paddle.
      * @param position Position.
      */
     void setPosition(const glm::vec2& position);
 
     /**
+     * @brief Gets the size of the paddle.
      * @return Size.
      */
-    const glm::vec2& size() const { return mSize; }
+    [[nodiscard]] const glm::vec2& size() const noexcept { return mSize; }
 
     /**
-     * @brief Set the speed of the paddle to move up.
+     * @brief Sets the speed of the paddle to move upwards.
      */
     void moveUp();
 
     /**
-     * @brief Set the speed of the paddle to move down.
+     * @brief Sets the speed of the paddle to move downwards.
      */
     void moveDown();
 
     /**
-     * @brief Set the speed of the paddle to zero.
+     * @brief Sets the paddle's vertical speed to zero.
      */
     void stop();
 
     /**
-     * @brief Set up the paddle.
+     * @brief Links the paddle to its external gameplay dependencies.
      *
-     * @param table Identifier of the table.
-     * @param ball  Identifier of the ball.
+     * This method must be called after all game entities have been created to resolve the circular dependency between
+     * paddles and the ball.
+     * @param table A reference to the game table for boundary checks.
+     * @param ball A reference to the ball.
      */
-    void setup(int table, int ball);
+    void setup(const Table& table, const Ball& ball);
 
     void handle(const Event& event) override;
 
-    void update(float dt) override;
+    void update(Seconds dt) override;
 
-    void draw(float dt, float interp, Renderer& renderer) override;
+    void draw(Renderer& renderer, float interp) override;
 
 private:
 
     /** @brief Controller. */
-    ControllerPtr mController;
+    std::unique_ptr<Controller> mController;
 
-    /** @brief Position. */
+    /** @brief The current center position of the paddle. */
     glm::vec2 mPosition;
 
-    /** @brief Previous position. */
+    /** @brief The position of the paddle in the previous frame, used for interpolation. */
     glm::vec2 mPositionPrev;
 
-    /** @brief Size (x = width, y = height). */
+    /** @brief The width and height of the paddle (x = width, y = height). */
     glm::vec2 mSize = glm::vec2(1.0f);
 
-    /** @brief Speed. */
+    /** @brief The current vertical speed of the paddle. */
     float mSpeed = 0.0f;
 
-    /** @brief Identifier of the table. */
-    int mTable = -1;
+    /** @brief Pointer to the game table. */
+    const Table* mTable = nullptr;
 
-    /** @brief Identifier of the ball. */
-    int mBall = -1;
+    /** @brief Pointer to the game ball. */
+    const Ball* mBall = nullptr;
 };
 
 ////////////////////////////////////////////////////////////

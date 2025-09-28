@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,16 +20,14 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Project.hpp.in
-/// @date   2015-11-10
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
-#define PONG_VERSION_MAJOR (@protopong-game_VERSION_MAJOR@)
-#define PONG_VERSION_MINOR (@protopong-game_VERSION_MINOR@)
-#define PONG_VERSION_PATCH (@protopong-game_VERSION_PATCH@)
-#define PONG_VERSION       "@protopong-game_VERSION@"
+#pragma once
+
+#define PONG_VERSION_MAJOR (@protopong_VERSION_MAJOR@)
+#define PONG_VERSION_MINOR (@protopong_VERSION_MINOR@)
+#define PONG_VERSION_PATCH (@protopong_VERSION_PATCH@)
+#define PONG_VERSION       "@protopong_VERSION@"
 
 ////////////////////////////////////////////////////////////
 

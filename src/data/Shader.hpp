@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,48 +20,62 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/data/Shader.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
+#include <string_view>
+#include <array>
 
-namespace pong  {
-namespace data  {
+namespace pong::data {
 
-////////////////////////////////////////////////////////////
-/// @brief Define a class that contains the sound data.
-////////////////////////////////////////////////////////////
-class Shader
+/**
+ * @brief Vertex data for a 2D quad made of two triangles.
+ * Covers the screen area from -0.5 to 0.5.
+ */
+inline constexpr std::array QuadVertices =
 {
-public:
-
-    /** @brief Array with the vertices of a quad. */
-    static const float Quad[12];
-
-    /** @brief OpenGL 2 vertex shader. */
-    static const char* GL2_vs;
-
-    /** @brief OpenGL 2 fragment shader. */
-    static const char* GL2_fs;
-
-    /** @brief OpenGL 3 vertex shader. */
-    static const char* GL3_vs;
-
-    /** @brief OpenGL 3 fragment shader. */
-    static const char* GL3_fs;
-
-    /**
-     * @brief Constructor.
-     */
-    Shader() = delete;
+    -0.5f,  0.5f,
+    -0.5f, -0.5f,
+     0.5f,  0.5f,
+     0.5f,  0.5f,
+    -0.5f, -0.5f,
+     0.5f, -0.5f
 };
 
-////////////////////////////////////////////////////////////
+/**
+ * @brief Vertex shader source code for OpenGL 3.3+ Core profile.
+ */
+inline constexpr std::string_view GL3VS = R"(
+#version 330 core
 
-} // namespace data
-} // namespace pong
+layout(location = 0) in vec2 v_position;
+layout(location = 1) in vec4 v_color;
+
+uniform mat4 transform;
+
+out vec4 vss_color;
+
+void main()
+{
+    gl_Position = vec4(v_position, 0.0, 1.0) * transform;
+    vss_color   = v_color;
+}
+)";
+
+/**
+ * @brief Fragment shader source code for OpenGL 3.3+ Core profile.
+ */
+inline constexpr std::string_view GL3FS = R"(
+#version 330 core
+
+in  vec4 vss_color;
+out vec4 fragColor;
+
+void main()
+{
+    fragColor = vss_color;
+}
+)";
+
+} // namespace pong::data

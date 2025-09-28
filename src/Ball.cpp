@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,6 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Ball.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "Ball.hpp"
@@ -34,29 +30,14 @@
 #include "Paddle.hpp"
 #include "Game.hpp"
 #include "Renderer.hpp"
-
-////////////////////////////////////////////////////////////
-// Helpers
-////////////////////////////////////////////////////////////
+#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/norm.hpp>
 
 namespace pong {
 namespace      {
 
-////////////////////////////////////////////////////////////
-
 /**
- * @brief Check if a ball collides with a paddle.
- *
- * @param ball   Ball.
- * @param paddle Paddle.
- * @param where  Point where the collision happens.
- *
- * @return True if the ball and the paddle collide; otherwise, false.
- */
-bool collision(const Ball& ball, const Paddle& paddle, glm::vec2& where);
-
-/**
- * @brief Calculate the intersection between a circle and a line.
+ * @brief Calculates the intersection between a circle and a line.
  *
  * @param c Center of the circle.
  * @param r Radius of the circle.
@@ -64,23 +45,11 @@ bool collision(const Ball& ball, const Paddle& paddle, glm::vec2& where);
  * @param b End point of the line.
  * @param p Intersection.
  *
- * @return True if the circle and the line intersect; otherwise, false.
+ * @return True if the circle and the line intersect, false otherwise.
  */
 bool collisionCircleLine(const glm::vec2& c, float r, const glm::vec2& a, const glm::vec2& b, glm::vec2& p);
 
-////////////////////////////////////////////////////////////
-
 } // namespace
-
-////////////////////////////////////////////////////////////
-// Ball
-////////////////////////////////////////////////////////////
-
-const float Ball::MaxBounceAngle = glm::radians(55.0f);
-const float Ball::MinSpeed       = 100.0f;
-const float Ball::MaxSpeed       = 180.0f;
-
-////////////////////////////////////////////////////////////
 
 Ball::Ball(const glm::vec2& position, const float radius)
     :
@@ -91,8 +60,6 @@ Ball::Ball(const glm::vec2& position, const float radius)
     mSpeed       (100.0f, 0.0f)
 {}
 
-////////////////////////////////////////////////////////////
-
 void Ball::reset(const glm::vec2& position, const float speed)
 {
     mPosition     = position;
@@ -101,16 +68,12 @@ void Ball::reset(const glm::vec2& position, const float speed)
     mPoint        = Point::None;
 }
 
-////////////////////////////////////////////////////////////
-
-void Ball::setup(const int table, const int paddleA, const int paddleB)
+void Ball::setup(const Table& table, const Paddle& paddleA, const Paddle& paddleB)
 {
-    mTable   = table;
-    mPaddleA = paddleA;
-    mPaddleB = paddleB;
+    mTable   = &table;
+    mPaddleA = &paddleA;
+    mPaddleB = &paddleB;
 }
-
-////////////////////////////////////////////////////////////
 
 void Ball::handle(const Event& event)
 {
@@ -121,66 +84,100 @@ void Ball::handle(const Event& event)
     }
 }
 
-////////////////////////////////////////////////////////////
-
-void Ball::update(const float dt)
+void Ball::update(const Seconds dt)
 {
-    auto& table   = static_cast<Table&> (scene().at(mTable));
-    auto& paddleA = static_cast<Paddle&>(scene().at(mPaddleA));
-    auto& paddleB = static_cast<Paddle&>(scene().at(mPaddleB));
-    // Reset the collision flag and update the position.
-    mCollision     = false;
-    mPositionPrev  = mPosition;
-    mPosition      = mPosition + mSpeed * dt;
-    // Check for collisions with the boundaries of the table.
-    if (top()    > table.top())    { mPosition.y = table.top()    - mRadius; mSpeed.y *= -1.0f; mCollision = true; }
-    if (bottom() < table.bottom()) { mPosition.y = table.bottom() + mRadius; mSpeed.y *= -1.0f; mCollision = true; }
-    if (right()  > table.right())  { mPoint = Point::B; }
-    if (left()   < table.left ())  { mPoint = Point::A; }
-    // Check for collisions with the paddles.
-    glm::vec2 pos;
-    bool ca = collision(*this, paddleA, pos);
-    bool cb = collision(*this, paddleB, pos);
-    // If there was a collision with the paddles.
-    if (ca || cb)
+    if (!mTable || !mPaddleA || !mPaddleB)
     {
-        float rdist; // Relative distance.
-        float speed = glm::length(mSpeed);
-        float sign  = glm::sign(mSpeed.x);
-        // There was a collision, so play the collision sound.
-        mCollision = true;
-        // Collision with paddle A.
-        if (ca)
-        {
-            mPosition.x = paddleA.position().x - paddleA.size().x * 0.5f - mRadius;
-            // Calculate the position of the collision relative to the center of the paddle A.
-            rdist = (pos.y - paddleA.position().y) / (paddleA.size().y * 0.5f);
-        }
-        // Collision with paddle B.
-        if (cb)
-        {
-            mPosition.x = paddleB.position().x + paddleB.size().x * 0.5f + mRadius;
-            // Calculate the position of the collision relative to the center of the paddle B.
-            rdist = (pos.y - paddleB.position().y) / (paddleB.size().y * 0.5f);
-        }
-        // Increment the speed regarding the position of the collision (near the center, the speed is reduced; near
-        // the end of the paddle, the speed is increased).
-        speed += 25.0f * ((3.0f * glm::abs(rdist) - 1) * (2.0f - glm::abs(rdist)) * 0.5f);
-        // Clamp the speed between its minimum and maximum values.
-        speed = glm::min(MaxSpeed, glm::max(MinSpeed, speed));
-        // Calculate the new speed vector.
-        mSpeed = -speed * glm::rotate(glm::vec2(sign, 0.0f), -sign * MaxBounceAngle * rdist);
+        return;
     }
+    // Reset the collision state and update the position.
+    mCollisionOccurred = false;
+    mPositionPrev = mPosition;
+    mPosition = mPosition + mSpeed * static_cast<float>(dt.count());
+    // Check for collisions with the top and bottom boundaries of the table.
+    checkWallCollisions();
+    // Check for collisions (scores) with the left and right boundaries of the table.
+    checkScore();
+    // Check for collisions with the paddles.
+    checkPaddleCollisions();
     // Play the collision sound if there was a collision.
-    if (mCollision)
+    if (mCollisionOccurred)
     {
-        scene().game().audio().play();
+        scene()->game().audio().play();
     }
 }
 
-////////////////////////////////////////////////////////////
+void Ball::checkWallCollisions()
+{
+    if (top() > mTable->top())
+    {
+        mPosition.y = mTable->top() - mRadius;
+        mSpeed.y *= -1.0f;
+        mCollisionOccurred = true;
+    }
 
-void Ball::draw(const float dt, const float interp, Renderer& renderer)
+    if (bottom() < mTable->bottom())
+    {
+        mPosition.y = mTable->bottom() + mRadius;
+        mSpeed.y *= -1.0f;
+        mCollisionOccurred = true;
+    }
+}
+
+void Ball::checkScore()
+{
+    if (right() > mTable->right())
+    {
+        mPoint = Point::B;
+    }
+
+    if (left() < mTable->left ())
+    {
+        mPoint = Point::A;
+    }
+}
+
+void Ball::checkPaddleCollisions()
+{
+    // Check for collisions with the paddles.
+    glm::vec2 pos;
+    const bool ca = collision(*this, *mPaddleA, pos);
+    const bool cb = collision(*this, *mPaddleB, pos);
+    // If there was a collision with the paddles.
+    if (!ca && !cb)
+    {
+        return;
+    }
+
+    float       rDist = 0.0f; // Relative distance.
+    float       speed = glm::length(mSpeed);
+    const float sign  = glm::sign(mSpeed.x);
+    // There was a collision, so play the collision sound.
+    mCollisionOccurred = true;
+    // Collision with paddle A.
+    if (ca)
+    {
+        mPosition.x = mPaddleA->position().x - mPaddleA->size().x * 0.5f - mRadius;
+        // Calculate the position of the collision relative to the center of the paddle A.
+        rDist = (pos.y - mPaddleA->position().y) / (mPaddleA->size().y * 0.5f);
+    }
+    // Collision with paddle B.
+    if (cb)
+    {
+        mPosition.x = mPaddleB->position().x + mPaddleB->size().x * 0.5f + mRadius;
+        // Calculate the position of the collision relative to the center of the paddle B.
+        rDist = (pos.y - mPaddleB->position().y) / (mPaddleB->size().y * 0.5f);
+    }
+    // Increment the speed regarding the position of the collision (near the center, the speed is reduced; near the end
+    // of the paddle, the speed is increased).
+    speed += 25.0f * ((3.0f * glm::abs(rDist) - 1) * (2.0f - glm::abs(rDist)) * 0.5f);
+    // Clamp the speed between its minimum and maximum values.
+    speed = glm::min(MaxSpeed, glm::max(MinSpeed, speed));
+    // Calculate the new speed vector.
+    mSpeed = -speed * glm::rotate(glm::vec2(sign, 0.0f), -sign * MaxBounceAngle * rDist);
+}
+
+void Ball::draw(Renderer& renderer, const float interp)
 {
     if (mPoint != Point::None)
     {
@@ -190,13 +187,7 @@ void Ball::draw(const float dt, const float interp, Renderer& renderer)
     renderer.queueQuad(mPosition * interp + mPositionPrev * (1.0f - interp), glm::vec2(mRadius * 2.0f));
 }
 
-////////////////////////////////////////////////////////////
-
-namespace {
-
-////////////////////////////////////////////////////////////
-
-bool collision(const Ball& ball, const Paddle& paddle, glm::vec2& where)
+bool Ball::collision(const Ball& ball, const Paddle& paddle, glm::vec2& where)
 {
     // Add the ball radius to the paddle radius.
     const float radii = glm::length(paddle.size() * 0.5f) + ball.radius();
@@ -226,7 +217,7 @@ bool collision(const Ball& ball, const Paddle& paddle, glm::vec2& where)
     return false;
 }
 
-////////////////////////////////////////////////////////////
+namespace {
 
 bool collisionCircleLine(const glm::vec2& c, const float r, const glm::vec2& a, const glm::vec2& b, glm::vec2& p)
 {
@@ -258,8 +249,6 @@ bool collisionCircleLine(const glm::vec2& c, const float r, const glm::vec2& a, 
     // No intersection.
     return false;
 }
-
-////////////////////////////////////////////////////////////
 
 } // namespace
 } // namespace pong

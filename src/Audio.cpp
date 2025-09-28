@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,6 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Audio.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "Audio.hpp"
@@ -33,120 +29,122 @@
 #include <vector>
 #include <SDL.h>
 
-////////////////////////////////////////////////////////////
-
 #define PONG_AUDIO_RESUME 0
 #define PONG_AUDIO_PAUSE  1
 
-////////////////////////////////////////////////////////////
-
 namespace pong {
 
-////////////////////////////////////////////////////////////
-
+/**
+ * @brief Structure that encapsulates all SDL-related audio device data.
+ *
+ * This structure holds the unique identifier for the opened audio device and a copy of the final `SDL_AudioSpec` that
+ * the hardware is using, which may differ from the one requested.
+ * Its lifetime is managed by the parent `Audio` class.
+ */
 struct Audio::Device
 {
-    /** @brief Device identifier. */
+    /** @brief Unique ID for the opened SDL audio device. A value of 0 indicates an error or uninitialized state. */
     SDL_AudioDeviceID mId;
 
-    /** @brief Audio specification. */
+    /** @brief Audio specification (frequency, format, etc.) that the device was actually opened with. */
     SDL_AudioSpec mSpec;
 };
 
-////////////////////////////////////////////////////////////
-
+/**
+ * @brief Structure that holds the raw, converted audio data and playback state.
+ *
+ * This structure contains the audio sample data in a vector, converted to the format required by the audio device. It
+ * also tracks the current playback position within that buffer.
+ */
 struct Audio::Sound
 {
     /**
-     * @return Size, in bytes.
+     * @brief Gets the total size of the audio buffer, in bytes.
+     * @return The size of the buffer.
      */
-    std::size_t size() const
-    {
-        return mBuffer.size();
-    }
+    std::size_t size() const { return mBuffer.size(); }
 
     /**
-     * @return Read-only pointer to the data at the current position in the buffer.
+     * @brief Gets a pointer to the current playback position within the audio buffer.
+     * @return A read-only pointer to the data at the current position.
      */
-    const Uint8* data() const
-    {
-        return &mBuffer[mPosition];
-    }
+    const Uint8* data() const { return &mBuffer[mPosition]; }
 
     /**
-     * @return Read position, in bytes, from the beginning of the buffer.
+     * @brief Gets the current playback position in bytes from the beginning of the buffer.
+     * @return The current position.
      */
-    Uint32 position() const
-    {
-        return mPosition;
-    }
+    Uint32 position() const { return mPosition; }
 
     /**
-     * @brief Advance the read position.
-     *
-     * @param amount Amount, in bytes.
-     *
-     * @return True on success; otherwise, false.
+     * @brief Advances the playback position by a given amount.
+     * @details Checks for buffer boundaries to prevent reading past the end of the sound.
+     * @param amount The number of bytes to advance.
+     * @return True if the new position is valid, false if the end of the sound was reached.
      */
     bool advance(const Uint32 amount)
     {
         const Uint32 next = mPosition + amount;
-
         if (next >= size())
         {
             return false;
         }
 
         mPosition = next;
-
         return true;
     }
 
     /**
-     * @brief Rewind the sound.
+     * @brief Resets the playback position to the beginning of the sound.
      */
-    void rewind()
-    {
-        mPosition = 0;
-    }
+    void rewind() { mPosition = 0; }
 
     /**
-     * @brief Allocate memory for a new buffer.
-     *
-     * @param amount Amount of memory to allocate.
-     *
-     * @return Read/write pointer to the buffer.
+     * @brief Allocates (or reallocates) the internal buffer to a new size.
+     * @param amount The desired size of the buffer in bytes.
+     * @return A raw, writable pointer to the beginning of the newly allocated buffer.
      */
     Uint8* alloc(const std::size_t amount)
     {
         mBuffer.resize(amount, 0);
-
         return mBuffer.data();
     }
 
 private:
 
-    /** @brief Read position, in bytes. */
-    Uint32 mPosition = 0;
-
-    /** @brief Data buffer. */
+    /** @brief The raw audio data, converted to the device's format. */
     std::vector<Uint8> mBuffer;
+
+    /** @brief The current read position within the buffer for playback, in bytes. */
+    Uint32 mPosition = 0;
 };
 
-////////////////////////////////////////////////////////////
+std::unique_ptr<Audio> Audio::create()
+{
+    auto audio = std::unique_ptr<Audio>(new Audio{});
+    if (audio->init())
+    {
+        return audio;
+    }
+
+    return nullptr;
+}
+
 
 Audio::Audio()
-    :
-    mDevice(new Device),
-    mSound (new Sound),
-    mError (false)
-{}
+{
+    mDevice = std::make_unique<Device>();
+    mSound  = std::make_unique<Sound>();
+}
 
-////////////////////////////////////////////////////////////
-
-Audio::~Audio() = default;
-
-////////////////////////////////////////////////////////////
+Audio::~Audio()
+{
+    if (mDevice->mId != 0)
+    {
+        SDL_LockAudioDevice (mDevice->mId);
+        SDL_CloseAudioDevice(mDevice->mId);
+    }
+}
 
 bool Audio::init()
 {
@@ -162,50 +160,33 @@ bool Audio::init()
     // Try to open the audio device.
     if ((mDevice->mId = SDL_OpenAudioDevice(nullptr, 0, &want, &mDevice->mSpec, 0)) == 0)
     {
-        mError = true;
+        return false;
     }
     // Try to load the sound.
-    if (!load(data::Sound::SizePong, data::Sound::Pong))
+    if (!load(data::PongSound.size(), data::PongSound.data()))
     {
-        mError = true;
-    }
-    // Done.
-    return !mError;
-}
-
-////////////////////////////////////////////////////////////
-
-void Audio::quit()
-{
-    if (mDevice)
-    {
-        SDL_CloseAudioDevice(mDevice->mId);
+        return false;
     }
 
-    mSound .reset();
-    mDevice.reset();
+    return true;
 }
-
-////////////////////////////////////////////////////////////
 
 void Audio::play()
 {
-    if (mError)
+    if (!mDevice || mDevice->mId == 0)
     {
         return;
     }
 
-    if (SDL_GetAudioDeviceStatus(mDevice->mId) == SDL_AUDIO_PAUSED)
-    {
-        mSound->rewind();
+    // Lock the device to safety modify the state of the sound.
+    SDL_LockAudioDevice(mDevice->mId);
+    mSound->rewind();
+    SDL_UnlockAudioDevice(mDevice->mId);
 
-        SDL_PauseAudioDevice(mDevice->mId, PONG_AUDIO_RESUME);
-    }
+    SDL_PauseAudioDevice(mDevice->mId, PONG_AUDIO_RESUME);
 }
 
-////////////////////////////////////////////////////////////
-
-bool Audio::load(const std::size_t size, const void* mem)
+bool Audio::load(const std::size_t size, const void* data)
 {
     // Audio specification for the WAV file.
     SDL_AudioSpec wavSpec;
@@ -214,7 +195,7 @@ bool Audio::load(const std::size_t size, const void* mem)
     // Buffer with the audio data.
     Uint8* wavBuffer = nullptr;
     // Prepare the buffer to be read by SDL.
-    SDL_RWops* rw = SDL_RWFromConstMem(mem, static_cast<int>(size));
+    SDL_RWops* rw = SDL_RWFromConstMem(data, static_cast<int>(size));
     if (!rw)
     {
         return false;
@@ -244,12 +225,14 @@ bool Audio::load(const std::size_t size, const void* mem)
     return true;
 }
 
-////////////////////////////////////////////////////////////
-
 void Audio::callback(void* data, unsigned char* stream, int length)
 {
     Device* device = static_cast<Audio*>(data)->mDevice.get();
-    Sound*  sound  = static_cast<Audio*>(data)->mSound .get();
+    Sound*  sound  = static_cast<Audio*>(data)->mSound.get();
+    if (!device || !sound)
+    {
+        return;
+    }
     // Reset the buffer.
     std::memset(stream, 0, static_cast<std::size_t>(length));
     // Calculate the remaining data.
@@ -262,7 +245,5 @@ void Audio::callback(void* data, unsigned char* stream, int length)
         SDL_PauseAudioDevice(device->mId, PONG_AUDIO_PAUSE);
     }
 }
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

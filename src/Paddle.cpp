@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,36 +20,25 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Paddle.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "Paddle.hpp"
 #include "Controller.hpp"
+#include "Renderer.hpp"
 #include "Event.hpp"
 #include "Scene.hpp"
 #include "Table.hpp"
-#include "Ball.hpp"
-#include "Renderer.hpp"
-
-////////////////////////////////////////////////////////////
 
 namespace pong {
 
-////////////////////////////////////////////////////////////
-
-Paddle::Paddle(Controller* controller, const glm::vec2& position, const glm::vec2& size)
+Paddle::Paddle(std::unique_ptr<Controller> controller, const glm::vec2& position, const glm::vec2& size)
     :
     Entity       (Type::Paddle),
-    mController  (controller),
+    mController  (std::move(controller)),
     mPosition    (position),
     mPositionPrev(position),
     mSize        (size)
 {}
-
-////////////////////////////////////////////////////////////
 
 void Paddle::setPosition(const glm::vec2 &position)
 {
@@ -57,36 +46,26 @@ void Paddle::setPosition(const glm::vec2 &position)
     mPositionPrev = position;
 }
 
-////////////////////////////////////////////////////////////
-
 void Paddle::moveUp()
 {
-    mSpeed = 120.0f;
+    mSpeed = MovementSpeed;
 }
-
-////////////////////////////////////////////////////////////
 
 void Paddle::moveDown()
 {
-    mSpeed = -120.0f;
+    mSpeed = -MovementSpeed;
 }
-
-////////////////////////////////////////////////////////////
 
 void Paddle::stop()
 {
     mSpeed = 0.0f;
 }
 
-////////////////////////////////////////////////////////////
-
-void Paddle::setup(const int table, const int ball)
+void Paddle::setup(const Table& table, const Ball& ball)
 {
-    mTable = table;
-    mBall  = ball;
+    mTable = &table;
+    mBall  = &ball;
 }
-
-////////////////////////////////////////////////////////////
 
 void Paddle::handle(const Event& event)
 {
@@ -99,29 +78,20 @@ void Paddle::handle(const Event& event)
     }
 }
 
-////////////////////////////////////////////////////////////
-
-void Paddle::update(const float dt)
+void Paddle::update(const Seconds dt)
 {
-    auto& table = static_cast<Table&>(scene().at(mTable));
-    auto&  ball = static_cast<Ball&> (scene().at(mBall));
-
-    mController->update(*this, table, ball, dt);
+    mController->update(*this, *mTable, *mBall, dt.count());
 
     mPositionPrev = mPosition;
-    mPosition     = mPosition + glm::vec2(0.0f, mSpeed * dt);
+    mPosition     = mPosition + glm::vec2(0.0f, mSpeed * dt.count());
 
-    if (mPosition.y + mSize.y * 0.5f > table.top())    { mPosition.y = table.top()    - mSize.y * 0.5f; }
-    if (mPosition.y - mSize.y * 0.5f < table.bottom()) { mPosition.y = table.bottom() + mSize.y * 0.5f; }
+    if (mPosition.y + mSize.y * 0.5f > mTable->top())    { mPosition.y = mTable->top()    - mSize.y * 0.5f; }
+    if (mPosition.y - mSize.y * 0.5f < mTable->bottom()) { mPosition.y = mTable->bottom() + mSize.y * 0.5f; }
 }
 
-////////////////////////////////////////////////////////////
-
-void Paddle::draw(const float dt, const float interp, Renderer& renderer)
+void Paddle::draw(Renderer& renderer, const float interp)
 {
     renderer.queueQuad(mPosition * interp + mPositionPrev * (1.0f - interp), mSize);
 }
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

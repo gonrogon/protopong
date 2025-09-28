@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,87 +20,79 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Renderer.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
-
-#include "Require.hpp"
-
-////////////////////////////////////////////////////////////
+#include <glm/glm.hpp>
 
 namespace pong {
 
-////////////////////////////////////////////////////////////
-/// @brief Define a renderer.
-////////////////////////////////////////////////////////////
+/**
+ * @class Renderer
+ * @brief Defines a pure abstract interface for a rendering system.
+ *
+ * @details This class provides a common API for all rendering backends (e.g., an OpenGL implementation). It defines the
+ * contract for initializing, shutting down, and performing frame-by-frame rendering operations.
+ *
+ * This class is non-copyable and non-movable as it represents a unique system resource.
+ * The intended lifecycle is:
+ *     construction -> `init()` -> frame loop (`beginFrame`/`endFrame`) -> `quit()` -> destruction.
+ */
 class Renderer
 {
 protected:
 
     /**
-     * @brief Constructor.
+     * @brief Protected default constructor to allow inheritance.
      */
     Renderer() = default;
 
 public:
 
+    Renderer(const Renderer&) = delete;
+
+    Renderer(Renderer&&) = delete;
+
+    Renderer& operator=(const Renderer&) = delete;
+
+    Renderer& operator=(Renderer&&) = delete;
+
     /**
-     * @brief Destructor.
+     * @brief Virtual destructor to ensure proper cleanup in derived classes.
      */
     virtual ~Renderer() = default;
 
     /**
-     * @brief Constructor (copy).
-     */
-    Renderer(const Renderer&) = delete;
-
-    /**
-     * @brief Initialize the renderer.
+     * @brief Prepares the renderer for a new frame.
      *
-     * @param screenWidth Screen width.
-     * @param screenHeight Screen height.
+     * This should be called once at the beginning of each frame's rendering phase. It typically clears the screen to a
+     * default color.
      */
-    virtual bool init(unsigned int screenWidth, unsigned int screenHeight) = 0;
+    virtual void beginFrame() = 0;
 
     /**
-     * @brief Finalize the renderer.
-     */
-    virtual void quit() = 0;
-
-    /**
-     * @brief Initiates the rendering.
-     */
-    virtual void begin() = 0;
-
-    /**
-     * @brief Finalizes the rendering.
-     */
-    virtual void end() = 0;
-
-    /**
-     * @brief Adds a white quad to the render queue.
+     * @brief Finalizes the frame and presents it to the screen.
      *
-     * @param size     Size.
-     * @param position Position.
+     * This should be called once at the end of each frame's rendering phase. It typically swaps the front and
+     * back buffers to display the rendered content.
+     */
+    virtual void endFrame() = 0;
+
+    /**
+     * @brief Adds a solid white quadrilateral to the render queue for the current frame.
+     * @param position The center position of the quad, in game units.
+     * @param size The width and height of the quad, in game units.
      */
     virtual void queueQuad(const glm::vec2& position, const glm::vec2& size) = 0;
 
     /**
-     * @brief Adds a quad to the render queue.
-     *
-     * @param size     Size.
-     * @param position Position.
-     * @param color    Color.
+     * @brief Adds a solid-colored quadrilateral to the render queue for the current frame.
+     * @param position The center position of the quad, in game units.
+     * @param size The width and height of the quad, in game units.
+     * @param color The RGBA color of the quad.
      */
     virtual void queueQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color) = 0;
 };
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

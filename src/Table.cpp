@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,39 +20,34 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Table.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "Table.hpp"
 #include "Renderer.hpp"
 
-////////////////////////////////////////////////////////////
-
 namespace pong {
+namespace {
 
-////////////////////////////////////////////////////////////
+/** @brief Width of the lines. */
+constexpr float LineWidth = 0.5f;
 
-Table::Table(const glm::vec2& position, const glm::vec2& size)
-    :
-    Entity   (Type::Table),
-    mPosition(position),
-    mSize    (size)
-{}
+/** @brief Color of the lines. */
+constexpr glm::vec4 LineColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
-////////////////////////////////////////////////////////////
-
-void Table::draw(const float dt, const float interp, Renderer& renderer)
-{
-    renderer.queueQuad({mPosition.x, top()},       {mSize.x, 0.50f}, {1.0f, 1.0f, 1.0f, 1.0f});
-    renderer.queueQuad({mPosition.x, bottom()},    {mSize.x, 0.50f}, {1.0f, 1.0f, 1.0f, 1.0f});
-    renderer.queueQuad({left(),      mPosition.y}, {0.50f, mSize.y}, {1.0f, 1.0f, 1.0f, 1.0f});
-    renderer.queueQuad({right(),     mPosition.y}, {0.50f, mSize.y}, {1.0f, 1.0f, 1.0f, 1.0f});
-    renderer.queueQuad(mPosition,                  {0.50f, mSize.y}, {1.0f, 1.0f, 1.0f, 1.0f});
 }
 
-////////////////////////////////////////////////////////////
+Table::Table(const glm::vec2& position, const glm::vec2& size) noexcept
+    :
+    Entity(Type::Table), mPosition(position), mSize(size)
+{}
+
+void Table::draw(Renderer& renderer, const float interp)
+{
+    renderer.queueQuad({mPosition.x, top()},       {mSize.x, LineWidth}, LineColor);
+    renderer.queueQuad({mPosition.x, bottom()},    {mSize.x, LineWidth}, LineColor);
+    renderer.queueQuad({left(),      mPosition.y}, {LineWidth, mSize.y}, LineColor);
+    renderer.queueQuad({right(),     mPosition.y}, {LineWidth, mSize.y}, LineColor);
+    renderer.queueQuad(mPosition,                  {LineWidth, mSize.y}, LineColor);
+}
 
 } // namespace pong

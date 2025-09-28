@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,25 +20,20 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Main.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "App.hpp"
+#include <memory>
 #include <SDL.h>
 
 ////////////////////////////////////////////////////////////
 
-int main(int argc, char* argv[])
+int main(const int argc, char* argv[])
 {
-    pong::App app;
-
-    if (app.init(argc, argv))
+    std::unique_ptr app(pong::App::create(argc, argv));
+    if (app)
     {
-        app.exec();
-        app.quit();
+        app->exec();
     }
 
     return EXIT_SUCCESS;

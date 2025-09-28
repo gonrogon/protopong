@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,54 +20,46 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Audio.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
-
-#include "Require.hpp"
 #include <memory>
-
-////////////////////////////////////////////////////////////
 
 namespace pong {
 
-////////////////////////////////////////////////////////////
-/// @brief Define an audio system.
-///
-/// This is a simple audio device made using the audio functions in SDL (no mixer). It only plays a sound, enough
-/// for a pong.
-////////////////////////////////////////////////////////////
+/**
+ * @brief Manages loading and playback of WAV audio using the SDL audio subsystem.
+ *
+ * This class is a self-contained audio engine designed for playing a single pre-loaded sound effect.
+ */
 class Audio
 {
-private:
-
-    /**
-     * @brief Define an audio device.
-     *
-     * It is a wrapper around SDL audio device.
-     */
+    /** @brief Define a wrapper for a SDL audio device. */
     struct Device;
 
-    /**
-     * @brief Define a sound.
-     *
-     * It handles a buffer to an audio file (WAV).
-     */
+    /** @brief Define a wrapper for a SDL sound. */
     struct Sound;
 
-    /** @brief Define a type for unique pointers to audio devices. */
-    typedef std::unique_ptr<Device> DevicePtr;
-
-    /** @brief Define a type for unique pointers to sounds. */
-    typedef std::unique_ptr<Sound> SoundPtr;
-
 public:
+
+    /**
+     * @brief Factory method to create and initialize the audio system.
+     * @return A unique pointer holding the new instance if initialization is successful, or null if it fails.
+     */
+    [[nodiscard]] static std::unique_ptr<Audio> create();
+
+    Audio(const Audio&) = delete;
+
+    Audio(Audio&&) = delete;
+
+    Audio& operator=(const Audio&) = delete;
+
+    Audio& operator=(Audio&&) = delete;
+
+    ~Audio();
+
+private:
 
     /**
      * @brief Constructor.
@@ -75,26 +67,12 @@ public:
     Audio();
 
     /**
-     * @brief Constructor (copy).
-     */
-    Audio(const Audio&) = delete;
-
-    /**
-     * @brief Destructor.
-     */
-    ~Audio();
-
-    /**
-     * @brief Initialize the audio system.
-     *
-     * @return True on success; otherwise, false.
+     * @brief Internal initialization method called by the factory.
+     * @return True on success, false otherwise.
      */
     bool init();
 
-    /**
-     * @brief Finalize the audio system.
-     */
-    void quit();
+public:
 
     /**
      * @brief Play the "pong" sound.
@@ -104,17 +82,17 @@ public:
 private:
 
     /**
-     * @brief Load an audio file from memory.
-     *
-     * @param size Size, in bytes.
-     * @param data Read-only pointer to the data.
+     * @brief Loads and converts a WAV file from memory.
+     * @param size Size of the memory buffer, in bytes.
+     * @param data Read-only pointer to the memory buffer.
+     * @return True on success, false otherwise.
      */
     bool load(std::size_t size, const void* data);
 
     /**
-     * @brief Audio callback for SDL.
+     * @brief C-style callback function passed to SDL audio.
      *
-     * @param data   User data (pointer to the instance of the audio system).
+     * @param data User data (pointer to the instance of the audio system).
      * @param stream Audio buffer to fill.
      * @param length Length of the buffer, in bytes.
      */
@@ -123,15 +101,10 @@ private:
 private:
 
     /** @brief Audio device. */
-    DevicePtr mDevice;
+    std::unique_ptr<Device> mDevice;
 
     /** @brief The "pong" sound. */
-    SoundPtr mSound;
-
-    /** @brief Flag indicating whether the audio system was initialized or not. */
-    bool mError = false;
+    std::unique_ptr<Sound> mSound;
 };
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

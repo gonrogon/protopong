@@ -29,4 +29,4 @@ THE SOFTWARE.
   https://www.libsdl.org
    
 * GLM: Licensed under The Happy Bunny License (Modified MIT License).\
-  https://glm.g-truc.net/0.9.9/index.html
+  https://glm.g-truc.net

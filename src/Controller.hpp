@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,62 +20,59 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Controller.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
-
-#include "Require.hpp"
-
-////////////////////////////////////////////////////////////
-
 namespace pong {
 
-////////////////////////////////////////////////////////////
-/// @brief Define an interface for paddle controllers.
-////////////////////////////////////////////////////////////
+class Paddle;
+class Table;
+class Ball;
+class Event;
+
+/**
+ * @brief Defines an interface for the behavior of a paddle.
+ *
+ * This class represents the "Strategy" pattern for a Paddle. Concrete implementations of this interface can define
+ * different behaviors, such as control by a human player (reacting to keyboard events) or control by an AI (reacting
+ * to the ball's position).
+ */
 class Controller
 {
 public:
 
-    /**
-     * @brief Constructor.
-     */
     Controller() = default;
 
-    /**
-     * @brief Constructor (copy).
-     */
     Controller(const Controller&) = delete;
 
-    /**
-     * @brief Destructor.
-     */
+    Controller(Controller&&) = delete;
+
+    Controller& operator=(const Controller&) = delete;
+
+    Controller& operator=(Controller&&) = delete;
+
     virtual ~Controller() = default;
 
     /**
-     * @brief Handle an event.
-     *
-     * @param event Event to handle.
+     * @brief Handles a game event.
+     * @details This method is primarily used by player-controlled strategies to react to keyboard input or other
+     * relevant events.
+     * @param event The event to be processed.
      */
     virtual void handle(const Event& event) = 0;
 
     /**
-     * @brief Update the controller.
+     * @brief Updates the state of the controlled paddle.
      *
-     * @param paddle Paddle to control.
-     * @param table  Table.
-     * @param ball   Ball.
-     * @param dt     Time elapsed since the last update.
+     * This method is called on every frame and contains the core logic for the controller's behavior (e.g., moving the
+     * paddle based on AI logic).
+     * @param paddle The paddle to be controlled.
+     * @param table A constant reference to the game table.
+     * @param ball A constant reference to the ball.
+     * @param dt The time elapsed since the last update frame (delta time) in seconds.
      */
     virtual void update(Paddle& paddle, const Table& table, const Ball& ball, float dt) = 0;
 };
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

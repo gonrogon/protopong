@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,6 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/App.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "App.hpp"
@@ -33,86 +29,68 @@
 #include "Project.hpp"
 #include "RealTimeClock.hpp"
 #include "RendererGL3.hpp"
-#include "RendererGL2.hpp"
-//#include <GL/glew.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <SDL.h>
 #include <iostream>
 #include <cstring>
 #include <cassert>
 
-////////////////////////////////////////////////////////////
-
-#define PONG_NAME       "Proto Pong " PONG_VERSION
-#define PONG_WPOS       SDL_WINDOWPOS_CENTERED
-#define PONG_A_KEY_UP   SDLK_UP
-#define PONG_A_KEY_DOWN SDLK_DOWN
-#define PONG_B_KEY_UP   SDLK_w
-#define PONG_B_KEY_DOWN SDLK_s
-
-////////////////////////////////////////////////////////////
-// Helpers
-////////////////////////////////////////////////////////////
-
 namespace pong {
-namespace 	   {
 
-////////////////////////////////////////////////////////////
+constexpr std::string_view PongWindowName = "Proto Pong " PONG_VERSION;
+constexpr unsigned int PongWindowPosition = SDL_WINDOWPOS_CENTERED;
+constexpr SDL_KeyCode PongAKeyUp   = SDLK_UP;
+constexpr SDL_KeyCode PongAKeyDown = SDLK_DOWN;
+constexpr SDL_KeyCode PongBKeyUp   = SDLK_w;
+constexpr SDL_KeyCode PongBKeyDown = SDLK_s;
 
-/**
- * @brief Open an SDL window with an OpenGL context.
- *
- * @param flags Flags.
- * @param major OpenGL context major version.
- * @param minor OpenGL context minor version.
- * @param win   Pointer where to store the handler for the window.
- * @param ctx   Pointer where to store the handler for the context.
- *
- * @return True on success; otherwise, false.
- */
-bool openOpenGLWindow(Uint32 flags, int major, int minor, void*& win, void*& ctx);
+void SDLDeleter::operator()(SDL_Window* win) const
+{
+    if (win)
+    {
+        SDL_DestroyWindow(win);
+    }
+}
 
-/**
- * @brief Destroy the SDL window and the OpenGL context.
- *
- * @param win Pointer where the handler for the window is stored.
- * @param ctx Pointer where the handler for the context is stored.
- */
-void destroyWindow(void*& win, void*& ctx);
+void SDLGLDeleter::operator()(void* ctx) const
+{
+    if (ctx)
+    {
+        SDL_GL_DeleteContext(ctx);
+    }
+}
 
-/**
- * @brief Enable vertical synchronization.
- *
- * @return True on success; otherwise, false.
- */
-bool enableVSync();
+std::unique_ptr<App> App::create(const int argc, char** argv)
+{
+    auto app = std::unique_ptr<App>(new App{});
+    if (app->init(argc, argv))
+    {
+        return app;
+    }
 
-////////////////////////////////////////////////////////////
+    return nullptr;
+}
 
-} // namespace
-
-////////////////////////////////////////////////////////////
-// CLASS: App
-////////////////////////////////////////////////////////////
-
-App::App()
-    :
-    mAudio   (new Audio),
-    mGame    (new Game(*mAudio))
-{}
+App::App() = default;
 
 ////////////////////////////////////////////////////////////
 
 App::~App()
 {
-    assert(mCtx == nullptr && mWin == nullptr && "Call the \"quit\" member function before deleting the application");
+    mGame     = {};
+    mAudio    = {};
+    mRenderer = {};
+    mCtx      = {};
+    mWin      = {};
+
+    SDL_Quit();
 }
 
 ////////////////////////////////////////////////////////////
 
-bool App::init(int argc, char** argv)
+bool App::init(const int argc, char** argv)
 {
-    SDL_DisplayMode vmode;
+    SDL_DisplayMode vMode;
     Uint32          flags;
     // Try to initialize SDL.
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0)
@@ -134,71 +112,45 @@ bool App::init(int argc, char** argv)
     }
     else
     {
-        flags = SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS;
+        flags = SDL_WINDOW_OPENGL;// | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS;
     }
     // Try to create the window.
-    if(openOpenGLWindow(flags, 3, 3, mWin, mCtx))
+    if(!openWindow(flags, 3, 3))
     {
-        mRenderer.reset(new RendererGL3());
-    }
-    else
-    {
-        if(openOpenGLWindow(flags, 2, 1, mWin, mCtx))
-        {
-            mRenderer.reset(new RendererGL2());
-        }
-        else
-        {
-            std::cerr << "Unable to create SDL window: " << SDL_GetError() << std::endl;
-            return false;
-        }
-    }
-    // Get the final video mode.
-    SDL_GetWindowDisplayMode(static_cast<SDL_Window*>(mWin), &vmode);
-    // Hide the mouse cursor because it is not required.
-    SDL_ShowCursor(SDL_DISABLE);
-    // Try to initialize GLEW.
-    /*
-    glewExperimental = GL_TRUE;
-    if (glewInit()  != GLEW_OK)
-    {
-        std::cerr << "Unable to initialize GLEW" << std::endl;
+        std::cerr << "Unable to create SDL window: " << SDL_GetError() << std::endl;
         return false;
     }
-    */
-    if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
+    // Get the final video mode.
+    SDL_GetWindowDisplayMode(mWin.get(), &vMode);
+    // Hide the mouse cursor because it is not required.
+    SDL_ShowCursor(SDL_DISABLE);
+    // Try to initialize GLAD.
+    if (!gladLoadGL(reinterpret_cast<GLADloadfunc>(SDL_GL_GetProcAddress))) {
         std::cerr << "Unable to initialize GLAD" << std::endl;
         return false;
     }
     // Try to initialize the renderer.
-    if (!mRenderer->init(static_cast<unsigned int>(vmode.w), static_cast<unsigned int>(vmode.h)))
+    mRenderer = RendererGL3::create(vMode.w, vMode.h);
+    if (!mRenderer)
     {
         std::cerr << "Unable to initialize the renderer" << std::endl;
         return false;
     }
     // Try to initialize the audio system. The audio system is not a critical component, so on failure the application can
     // run without it.
-    if (!mAudio->init())
+    mAudio = Audio::create();
+    if (!mAudio)
     {
         std::cerr << "Unable to initialize the audio system" << std::endl;
     }
     // Initiate random numbers.
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    // Initiate the game.
+    mGame = std::make_unique<Game>(*mAudio);
     // Wait to ensure the window is ready.
     SDL_Delay(500);
     // Everything is fine, :)
     return true;
-}
-
-////////////////////////////////////////////////////////////
-
-void App::quit()
-{
-    mAudio   ->quit();
-    mRenderer->quit();
-
-    if (mCtx) { SDL_GL_DeleteContext(static_cast<SDL_GLContext>(mCtx)); mCtx = nullptr; }
-    if (mWin) { SDL_DestroyWindow   (static_cast<SDL_Window*>  (mWin)); mWin = nullptr; }
 }
 
 ////////////////////////////////////////////////////////////
@@ -208,10 +160,10 @@ void App::exec()
           bool done  = false;
     const bool vsync = enableVSync();
 
-    const double tickTime  = 1.0 / 60.0f; // Time between updates.
-    const double drawTime  = 1.0 / 60.0f; // Time between draw calls (only if there is no vertical synchronization).
-          double tickAccum = 0.0;         // Time accumulator with the time elapsed between updates.
-          double drawAccum = 0.0;         // Time accumulator with the time elapsed between draw calls.
+    const RealTimeClock::Duration tickTime{1.0 / 60.0};
+    const RealTimeClock::Duration drawTime{1.0 / 60.0};
+    RealTimeClock::Duration tickAccum{};
+    RealTimeClock::Duration drawAccum{};
 
     RealTimeClock RTC;
 
@@ -219,7 +171,7 @@ void App::exec()
     {
         handleEvents();
         // Get the time elapsed since the last iteration.
-        double elapsed = RTC.restart();
+        RealTimeClock::Duration elapsed = RTC.restart();
         // Clamp the time elapsed to avoid the spiral of death.
         if (elapsed > tickTime * 4)
         {
@@ -237,34 +189,48 @@ void App::exec()
                              (mEvents.pop  ());
             }
             // Update the game and check if it has finished.
-                   mGame->update(static_cast<float>(tickTime));
+                   mGame->update(RealTimeClock::Duration(tickTime));
             done = mGame->done();
         }
         // Draw.
         if (!done)
         {
-            mRenderer->begin();
-            mGame->draw(static_cast<float>(drawAccum), static_cast<float>(tickAccum / tickTime), *mRenderer);
-            mRenderer->end();
+            mRenderer->beginFrame();
+            mGame->draw(*mRenderer, static_cast<float>(tickAccum / tickTime));
+            mRenderer->endFrame();
             // Reset the time accumulator with the time elapsed between draw calls.
-            drawAccum = 0;
+            drawAccum = {};
             // Swap the buffers.
-            SDL_GL_SwapWindow(static_cast<SDL_Window*>(mWin));
-            // If there is no vertical synchronization, the application is delayed until the next update or draw.
+            SDL_GL_SwapWindow(mWin.get());
+            // When VSync is disabled, the main loop can run at thousands of frames per second, consuming 100% of a CPU
+            // core. This block acts as a fallback manual frame limiter to conserve system resources.
             if (!vsync)
             {
-                double delay = std::min(tickTime - tickAccum, drawTime - drawAccum) - RTC.elapsed() * 1000.0;
-
-                if (delay > 0.0)
+                /*
+                 * The logic calculates the "spare time" available before the next scheduled game event and puts the
+                 * thread to sleep for that duration.
+                 *
+                 * 1. Calculate Time to Next Event: It finds the time remaining until the next physics tick is due
+                 *    (`tickTime - tickAccum`) and the time until the next draw call is due (`drawTime - drawAccum`).
+                 * 2. Find the Soonest Event: `std::min` selects the smaller of these two durations. We must sleep for
+                 *    no longer than this to avoid delaying the next event.
+                 * 3. Self-Correction: It then subtracts `RTC.elapsed()`, which is the time already spent performing
+                 *    work (like drawing) within the current frame. This ensures the delay calculation is accurate, and
+                 *    we don't oversleep.
+                 * 4. Sleep: If the resulting `delay` is a positive duration, it means we have spare time. The thread
+                 *    is put to sleep using `SDL_Delay`, yielding the CPU to the operating system. The duration is
+                 *    safely cast to milliseconds as required by the SDL API. If the delay is zero or negative, it means
+                 *    we are already running late (a "frame drop"), and no delay is performed.
+                 */
+                const RealTimeClock::Duration delay = std::min(tickTime - tickAccum, drawTime - drawAccum) - RTC.elapsed();
+                if (delay > RealTimeClock::Duration::zero())
                 {
-                    SDL_Delay(static_cast<Uint32>(delay));
+                    SDL_Delay(std::chrono::duration_cast<std::chrono::milliseconds>(delay).count());
                 }
             }
         }
     }
 }
-
-////////////////////////////////////////////////////////////
 
 void App::handleEvents()
 {
@@ -322,10 +288,10 @@ void App::handleEvents()
                     case SDLK_2:
                     case SDLK_KP_2:   { mEvents.emplace(Event::Type::Two);  } break;
                     // Player controls.
-                    case PONG_A_KEY_UP:   { mEvents.emplace(Event::Type::PlayerAMoveUp);   } break;
-                    case PONG_A_KEY_DOWN: { mEvents.emplace(Event::Type::PlayerAMoveDown); } break;
-                    case PONG_B_KEY_UP:   { mEvents.emplace(Event::Type::PlayerBMoveUp);   } break;
-                    case PONG_B_KEY_DOWN: { mEvents.emplace(Event::Type::PlayerBMoveDown); } break;
+                    case PongAKeyUp:   { mEvents.emplace(Event::Type::PlayerAMoveUp);   } break;
+                    case PongAKeyDown: { mEvents.emplace(Event::Type::PlayerAMoveDown); } break;
+                    case PongBKeyUp:   { mEvents.emplace(Event::Type::PlayerBMoveUp);   } break;
+                    case PongBKeyDown: { mEvents.emplace(Event::Type::PlayerBMoveDown); } break;
 
                     default:break;
                 }
@@ -337,10 +303,10 @@ void App::handleEvents()
                 switch (event.key.keysym.sym)
                 {
                     // Player controls.
-                    case PONG_A_KEY_UP:   { mEvents.emplace(Event::Type::PlayerAMoveUpReleased);   } break;
-                    case PONG_A_KEY_DOWN: { mEvents.emplace(Event::Type::PlayerAMoveDownReleased); } break;
-                    case PONG_B_KEY_UP:   { mEvents.emplace(Event::Type::PlayerBMoveUpReleased);   } break;
-                    case PONG_B_KEY_DOWN: { mEvents.emplace(Event::Type::PlayerBMoveDownReleased); } break;
+                    case PongAKeyUp:   { mEvents.emplace(Event::Type::PlayerAMoveUpReleased);   } break;
+                    case PongAKeyDown: { mEvents.emplace(Event::Type::PlayerAMoveDownReleased); } break;
+                    case PongBKeyUp:   { mEvents.emplace(Event::Type::PlayerBMoveUpReleased);   } break;
+                    case PongBKeyDown: { mEvents.emplace(Event::Type::PlayerBMoveDownReleased); } break;
 
                     default:break;
                 }
@@ -351,15 +317,9 @@ void App::handleEvents()
     }
 }
 
-////////////////////////////////////////////////////////////
-
-namespace {
-
-////////////////////////////////////////////////////////////
-
-bool openOpenGLWindow(const Uint32 flags, const int major, const int minor, void*& win, void*& ctx)
+bool App::openWindow(const unsigned int flags, const int major, const int minor)
 {
-    Uint32 sdlFlags = flags | SDL_WINDOW_HIDDEN;
+    const Uint32 sdlFlags = flags | SDL_WINDOW_HIDDEN;
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
@@ -373,51 +333,35 @@ bool openOpenGLWindow(const Uint32 flags, const int major, const int minor, void
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,  SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     }
     // Try to create the window.
-    win = SDL_CreateWindow(PONG_NAME, PONG_WPOS, PONG_WPOS, 1024, 768, sdlFlags);
-    if (win == nullptr)
+    mWin.reset(SDL_CreateWindow(PongWindowName.data(), PongWindowPosition, PongWindowPosition, 1024, 768, sdlFlags));
+    if (!mWin)
     {
         return false;
     }
     // Try to create the OpenGL context.
-    ctx = SDL_GL_CreateContext(static_cast<SDL_Window*>(win));
-    if (ctx == nullptr)
+    mCtx.reset(SDL_GL_CreateContext(mWin.get()));
+    if (!mCtx)
     {
-        destroyWindow(win, ctx);
-
         return false;
     }
 
     int glMajor = 0;
     int glMinor = 0;
-
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &glMajor);
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &glMinor);
 
     if (glMajor != major && glMinor != minor)
     {
-        destroyWindow(win, ctx);
-
         return false;
     }
 
     std::cout << "Window open, context version " << major << "." << minor << std::endl;
-
-    SDL_ShowWindow(static_cast<SDL_Window*>(win));
+    SDL_ShowWindow(mWin.get());
 
     return true;
 }
 
-////////////////////////////////////////////////////////////
-
-void destroyWindow(void*& win, void*& ctx)
-{
-    if (ctx != nullptr) { SDL_GL_DeleteContext(static_cast<SDL_GLContext>(ctx)); ctx = nullptr; }
-    if (win != nullptr) { SDL_DestroyWindow   (static_cast<SDL_Window*>  (win)); win = nullptr; }
-}
-
-////////////////////////////////////////////////////////////
-
-bool enableVSync()
+bool App::enableVSync()
 {
     if (SDL_GL_SetSwapInterval(-1) != 0)
     {
@@ -427,7 +371,4 @@ bool enableVSync()
     return true;
 }
 
-////////////////////////////////////////////////////////////
-
-} // namespace
 } // namespace pong

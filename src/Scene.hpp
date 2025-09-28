@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,113 +20,106 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Scene.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
-
-#include "Require.hpp"
+#include "RealTimeClock.hpp"
 #include <memory>
 #include <vector>
 
-////////////////////////////////////////////////////////////
-
 namespace pong {
 
-////////////////////////////////////////////////////////////
-/// @brief Define a scene.
-///
-/// A scene is a group of entities with a logical relationship.
-////////////////////////////////////////////////////////////
+class Renderer;
+class Entity;
+class Game;
+
+/**
+ * @brief Manages a collection of game entities and their lifecycle.
+ *
+ * The Scene is the primary container for all active game objects (`Entity`).
+ * It is responsible for:
+ * - **Ownership:** Exclusively owns all entities using `std::unique_ptr`, ensuring automatic memory management and
+ *   preventing leaks.
+ * - **Lifecycle:** Driving the main game loop for its entities by calling their `update()` and `draw()` methods each
+ *   frame.
+ * - **Access:** Providing a way to access entities for interaction.
+ */
 class Scene
 {
-private:
-
-    /** @brief Define a type for unique pointers to entities. */
-    typedef std::unique_ptr<Entity> EntityPtr;
-
-    /** @brief Define a type for vectors of entities. */
-    typedef std::vector<EntityPtr> Entities;
-
 public:
 
     /**
-     * @brief Constructor.
-     *
-     * @param game Game.
+     * @brief Constructs a new scene.
+     * @param game A reference to the main game object, which owns this scene.
      */
     explicit Scene(Game& game);
 
-    /**
-     * @brief Constructor (copy).
-     */
     Scene(const Scene&) = delete;
+
+    Scene(const Scene&&) = delete;
+
+    Scene& operator=(const Scene&) = delete;
+
+    Scene& operator=(Scene&&) = delete;
 
     /**
      * @brief Destructor.
+     * Automatically destroys all entities contained within the scene.
      */
     ~Scene();
 
     /**
-     * @return Game.
+     * @brief Gets a reference to the parent game object.
+     * @return A reference to the game.
      */
-    Game& game() const { return mGame; }
+    [[nodiscard]] Game& game() const noexcept { return mGame; }
 
     /**
-     * @brief Gets an entity.
-     *
+     * @brief Gets a reference to an entity by its index.
      * @warning This method does not check if the entity exists.
-     *
-     * @param i Index.
-     *
-     * @return Read/write reference to the entity.
+     * @note The method is `const` because it does not modify the Scene's container, but the returned entity itself can
+     * be modified.
+     * @param i The zero-based index of the entity to retrieve.
+     * @return A reference to the entity at the specified index.
      */
-    Entity& at(int i);
+    [[nodiscard]] Entity& at(int i) const;
 
     /**
-     * @brief Appends an entity.
+     * @brief Adds a new entity to the scene, taking ownership of it.
      *
-     * @param entity Entity to append.
-     *
-     * @return Index assigned to the entity.
+     * The provided `std::unique_ptr` is moved into the scene's internal storage. After this call, the original pointer
+     * will be null, and the scene becomes solely responsible for the entity's lifetime.
+     * @param entity Unique pointer to the entity being added.
+     * @return The index assigned to the newly added entity.
      */
-    int append(Entity* entity);
+    int append(std::unique_ptr<Entity> entity);
 
     /**
-     * @brief Clears the scene.
+     * @brief Removes all entities from the scene.
      */
     void clear();
 
     /**
-     * @brief Updates the scene.
-     *
-     * @param dt Time elapsed since the last update.
+     * @brief Updates the state of all entities in the scene.
+     * @param dt The time elapsed since the last update frame (delta time).
      */
-    void update(float dt);
+    void update(RealTimeClock::Duration dt);
 
     /**
-     * @brief Draws the scene.
-     *
-     * @param dt       Time elapsed since the last draw.
-     * @param interp   Interpolation value.
-     * @param renderer Renderer.
+     * @brief Draws all entities in the scene.
+     * @param renderer The renderer object to use for drawing operations.
+     * @param interp The interpolation value (between 0.0 and 1.0) for smooth rendering.
      */
-    void draw(float dt, float interp, Renderer& renderer);
+    void draw(Renderer& renderer, float interp);
 
 private:
 
-    /** @brief Game. */
+    /** @brief Parent Game object. */
     Game& mGame;
 
-    /** @brief List of entities. */
-    Entities mEntities;
+    /** @brief Vector with all entities in the scene. */
+    std::vector<std::unique_ptr<Entity>> mEntities;
 };
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

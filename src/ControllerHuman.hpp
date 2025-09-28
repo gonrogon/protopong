@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,33 +20,34 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/ControllerHuman.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
-
 #include "Controller.hpp"
-
-////////////////////////////////////////////////////////////
 
 namespace pong {
 
-////////////////////////////////////////////////////////////
-/// @brief Define a controller for human input.
-////////////////////////////////////////////////////////////
+/**
+ * @brief Implements a configurable controller strategy for a human-controlled paddle.
+ *
+ * This controller is configured for a specific player (A or B) upon construction. It internally filters game events to
+ * respond only to the inputs designated for its player.
+ */
 class ControllerHuman : public Controller
 {
 public:
 
     /**
-     * @brief Constructor.
+     * @brief Defines an enumeration that identifies the player this controller should respond to.
      */
-    ControllerHuman() = default;
+    enum class Player { A, B };
+
+    /**
+     * @brief Constructor.
+     * @param player The player (A or B) that this controller will listen to.
+     */
+    explicit ControllerHuman(Player player) noexcept;
 
     void handle(const Event& event) override;
 
@@ -54,8 +55,11 @@ public:
 
 private:
 
-    /** @brief Vertical speed to set. */
-    int mSpeed = 0;
+    /** @brief @brief The player this controller is responsible for. */
+    Player mPlayer;
+
+    /** @brief A state counter indicating the desired direction (-1 for down, 0 for stop, 1 for up). */
+    int mMoveDirection = 0;
 };
 
 ////////////////////////////////////////////////////////////

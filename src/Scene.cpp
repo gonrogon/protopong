@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,61 +20,36 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Scene.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "Scene.hpp"
 #include "Entity.hpp"
 
-////////////////////////////////////////////////////////////
-
 namespace pong {
 
-////////////////////////////////////////////////////////////
+Scene::Scene(Game& game) : mGame(game) {}
 
-Scene::Scene(Game& game)
-    :
-    mGame(game)
-{}
+Scene::~Scene() = default;
 
-////////////////////////////////////////////////////////////
-
-Scene::~Scene()
+Entity& Scene::at(const int i) const
 {
-    clear();
+    return *mEntities[static_cast<std::size_t>(i)];
 }
 
-////////////////////////////////////////////////////////////
-
-Entity& Scene::at(const int i)
+int Scene::append(std::unique_ptr<Entity> entity)
 {
-    return *mEntities.at(static_cast<Entities::size_type >(i));
-}
-
-////////////////////////////////////////////////////////////
-
-int Scene::append(Entity* entity)
-{
-    entity->setScene(*this);
-
-    mEntities.emplace_back(entity);
+    entity->setScene(this);
+    mEntities.emplace_back(std::move(entity));
 
     return static_cast<int>(mEntities.size() - 1);
 }
-
-////////////////////////////////////////////////////////////
 
 void Scene::clear()
 {
     mEntities.clear();
 }
 
-////////////////////////////////////////////////////////////
-
-void Scene::update(const float dt)
+void Scene::update(const RealTimeClock::Duration dt)
 {
     for (auto& ptr : mEntities)
     {
@@ -82,16 +57,12 @@ void Scene::update(const float dt)
     }
 }
 
-////////////////////////////////////////////////////////////
-
-void Scene::draw(const float dt, const float interp, Renderer& renderer)
+void Scene::draw(Renderer& renderer, const float interp)
 {
-    for (auto& ptr : mEntities)
+    for (const auto& ptr : mEntities)
     {
-        ptr->draw(dt, interp, renderer);
+        ptr->draw(renderer, interp);
     }
 }
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

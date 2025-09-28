@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,72 +20,77 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Entity.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
-
-#include "Require.hpp"
-
-////////////////////////////////////////////////////////////
+#include <RealTimeClock.hpp>
 
 namespace pong {
 
-////////////////////////////////////////////////////////////
-/// @brief Define an abstract class for entities.
-///
-/// All scene elements are entities.
-////////////////////////////////////////////////////////////
+class Renderer;
+class Scene;
+class Event;
+
+/**
+ * @class Entity
+ * @brief An abstract base class for all game objects.
+ *
+ * @details Every object in a scene, from players to UI elements, should derive from this class. It provides a common
+ * interface for event handling, state updates, and rendering.
+ */
 class Entity
 {
 public:
 
     /**
-     * @brief Define an enumeration with the types of entity.
+     * @brief A type alias for a time duration, representing seconds as a floating-point value.
+     */
+    using Seconds = RealTimeClock::Duration;
+
+    /**
+     * @brief Define an enumeration with the specific type of entity.
      */
     enum class Type
     {
-        Paddle, //!< Paddle.
-        Ball,   //!< Ball.
-        Table,  //!< Table.
-        Label   //!< Text label.
+        Paddle, //!< A player's paddle.
+        Ball,   //!< The game ball.
+        Table,  //!< The game area.
+        Label   //!< A text label for UI elements.
     };
 
 protected:
 
     /**
-     * @brief Constructor.
-     *
-     * @param type Type of entity.
+     * @brief Constructs.
+     * @param type The specific type of the derived entity.
      */
-    explicit Entity(Type type) : mType(type) {}
+    explicit Entity(const Type type) noexcept : mType(type) {}
 
 public:
 
-    /**
-     * @brief Constructor (copy).
-     */
     Entity(const Entity&) = delete;
 
-    /**
-     * @brief Destructor.
-     */
+    Entity(Entity&&) = delete;
+
+    Entity& operator=(const Entity&) = delete;
+
+    Entity& operator=(Entity&&) = delete;
+
     virtual ~Entity() = default;
 
     /**
+     * @brief Gets the type of the entity.
      * @return Type of entity.
      */
-    Type type() const { return mType; }
+    [[nodiscard]] Type type() const noexcept { return mType; }
 
     /**
-     * @return Read/write reference to the scene.
+     * @brief Gets a pointer to the scene that contains this entity.
+     * @warning This method can return nullptr if the entity is not currently attached to a scene.
+     * @return A pointer to the scene, or null if the entity is not in a scene.
      */
-    Scene& scene() const { return *mScene; }
+    [[nodiscard]] Scene* scene() const noexcept { return mScene; }
 
     /**
      * @brief Set the scene that contains this entity.
@@ -94,40 +99,47 @@ public:
      *
      * @param scene Scene to set.
      */
-    void setScene(Scene& scene) { mScene = &scene; }
+    /**
+     * @brief Sets the scene that contains this entity.
+     * @details This method is typically called by the `Scene` class itself when an entity is added to or removed from
+     * it.
+     * @param scene A pointer to the scene, or null to detach the entity.
+     */
+    void setScene(Scene* scene) noexcept { mScene = scene; }
 
     /**
-     * @brief Handle an event.
+     * @brief Handles a game event.
      *
-     * @param event Event to handle.
+     * Derived classes should override this method to react to relevant events.
+     * @param event The event to be processed.
      */
     virtual void handle(const Event& event) {}
 
     /**
-     * @brief Update the entity.
+     * @brief Updates the entity's internal state based on elapsed time.
      *
-     * @param dt Time elapsed since the last update.
+     * This is intended for physics or logic updates. Derived classes should override this method to implement
+     * their behavior.
+     * @param dt The time elapsed since the last update frame (delta time).
      */
-    virtual void update(float dt) {}
+    virtual void update(const Seconds dt) {}
 
     /**
-     * @brief Draw the entity.
+     * @brief Draws the entity to the screen.
      *
-     * @param dt       Time elapsed since the last draw.
-     * @param interp   Interpolation value.
-     * @param renderer Renderer.
+     * Derived classes must override this method to render themselves.
+     * @param renderer The renderer object to use for drawing operations.
+     * @param interp A value between 0.0 and 1.0 for physics state interpolation, used to achieve smooth rendering.
      */
-    virtual void draw(float dt, float interp, Renderer& renderer) {}
+    virtual void draw(Renderer& renderer, const float interp) {}
 
 private:
 
-    /** @brief Type of entity. */
+    /** @brief The specific type of this entity. */
     Type mType;
 
-    /** @brief Scene. */
+    /** @brief A pointer to the scene that owns this entity or null is the entity is not attached to a scene. */
     Scene* mScene = nullptr;
 };
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

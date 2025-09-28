@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,46 +20,26 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/RealTimeClock.cpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #include "RealTimeClock.hpp"
 
-////////////////////////////////////////////////////////////
-
 namespace pong {
 
-////////////////////////////////////////////////////////////
+RealTimeClock::RealTimeClock() noexcept : mStart(Clock::now()) {}
 
-RealTimeClock::RealTimeClock()
+RealTimeClock::Duration RealTimeClock::elapsed() const noexcept
 {
-    restart();
+    return Clock::now() - mStart;
 }
 
-////////////////////////////////////////////////////////////
-
-double RealTimeClock::elapsed() const
+RealTimeClock::Duration RealTimeClock::restart() noexcept
 {
-    Uint64 now     = SDL_GetPerformanceCounter();
-    Uint64 elapsed = now - mStart;
+    const auto now     = Clock::now();
+    const auto elapsed = now - mStart;
+    mStart = now;
 
-    return static_cast<double>(elapsed) / static_cast<double>(SDL_GetPerformanceFrequency());
+    return elapsed;
 }
-
-////////////////////////////////////////////////////////////
-
-double RealTimeClock::restart()
-{
-    Uint64 now     = SDL_GetPerformanceCounter();
-    Uint64 elapsed = now - mStart;
-           mStart  = now;
-
-    return static_cast<double>(elapsed) / static_cast<double>(SDL_GetPerformanceFrequency());
-}
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong

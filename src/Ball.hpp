@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
 /// Proto Pong
 ///
-/// Copyright (c) 2015 - 2016 Gonzalo González Romero
+/// Copyright (c) 2015 - 2025 Gonzalo González Romero (gonrogon)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -20,161 +20,185 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
-///
-/// @file   src/Ball.hpp
-/// @date   2015-11-02
-/// @author Gonzalo González Romero
 ////////////////////////////////////////////////////////////
 
 #pragma once
 
-////////////////////////////////////////////////////////////
-
 #include "Entity.hpp"
-
-////////////////////////////////////////////////////////////
+#include <glm/glm.hpp>
 
 namespace pong {
 
-////////////////////////////////////////////////////////////
-/// @brief Define an entity for the ball.
-////////////////////////////////////////////////////////////
-class Ball : public Entity
+class Table;
+class Paddle;
+
+/**
+ * @brief Represents the game ball, handling its physics, collisions, and scoring logic.
+ *
+ * The Ball is the central dynamic entity in the game. It moves autonomously and interacts with the paddles and table
+ * boundaries. It requires being linked to the Table and Paddles via the `setup()` method after its construction to
+ * function correctly. The class encapsulates all physics calculations, including complex angular bounces off the
+ * paddles.
+ */
+class Ball final : public Entity
 {
-private:
+    /** @brief Maximum angle (in radians) for a bounce off a paddle. */
+    static constexpr float MaxBounceAngle = glm::radians(55.0f);
 
-    /** @brief Maximum bounce angle. */
-    static const float MaxBounceAngle;
+    /** @brief Minimum speed of the ball. */
+    static constexpr float MinSpeed = 100.0f;
 
-    /** @brief Minimum speed. */
-    static const float MinSpeed;
+    /** @brief Maximum speed of the ball. */
+    static constexpr float MaxSpeed = 180.0f;
 
-    /** @brief Maximum speed. */
-    static const float MaxSpeed;
-
-    /**
-     * @brief Defines an enumeration with the types of points.
-     */
+    /** @brief Defines which player (if any) scored a point on the last update. */
     enum class Point
     {
         None, //!< None.
-        A,    //!< Point for player A.
-        B     //!< Point for player B.
+        A,    //!< A point was scored for Player A.
+        B     //!< A point was scored for Player B.
     };
 
 public:
 
     /**
      * @brief Constructor.
-     *
-     * @param position Position.
-     * @param radius   Radius.
+     * @param position The initial center position.
+     * @param radius The radius of the ball.
      */
     Ball(const glm::vec2& position, float radius);
 
     /**
+     * @brief Gets the current position of the ball.
      * @return Position.
      */
-    const glm::vec2& position() const { return mPosition; }
+    [[nodiscard]] const glm::vec2& position() const { return mPosition; }
 
     /**
+     * @brief Gets the radius of the ball (size).
      * @return Radius.
      */
-    float radius() const { return mRadius; }
+    [[nodiscard]] float radius() const { return mRadius; }
 
     /**
      * @return X-coordinate of the left side of the ball.
      */
-    float left() const { return mPosition.x - mRadius; }
+    [[nodiscard]] float left() const { return mPosition.x - mRadius; }
 
     /**
      * @return X-coordinate of the right side of the ball.
      */
-    float right() const { return mPosition.x + mRadius; }
+    [[nodiscard]] float right() const { return mPosition.x + mRadius; }
 
     /**
      * @return Y-coordinate of the top of the ball.
      */
-    float top() const { return mPosition.y + mRadius; }
+    [[nodiscard]] float top() const { return mPosition.y + mRadius; }
 
     /**
      * @return Y-coordinate of the bottom of the ball.
      */
-    float bottom() const { return mPosition.y - mRadius; }
+    [[nodiscard]] float bottom() const { return mPosition.y - mRadius; }
 
     /**
+     * @brief Gets current speed of the ball.
      * @return Speed.
      */
-    const glm::vec2& speed() const { return mSpeed; }
+    [[nodiscard]] const glm::vec2& speed() const { return mSpeed; }
 
     /**
-     * @return True if paddle A or B has scored a point; otherwise, false.
+     * @brief Checks if a point was scored in the last frame.
+     * @return True if any player scored, false otherwise.
      */
-    bool point() const { return mPoint == Point::A || mPoint == Point::B; }
+    [[nodiscard]] bool point() const { return mPoint == Point::A || mPoint == Point::B; }
 
     /**
-     * @return True if paddle A has scored a point; otherwise, false.
+     * @brief Checks if Player A scored in the last frame.
+     * @return True if Player A scored, false otherwise.
      */
-    bool pointPaddleA() const { return mPoint == Point::A; }
+    [[nodiscard]] bool pointPaddleA() const { return mPoint == Point::A; }
 
     /**
-     * @return True if paddle B has scored a point; otherwise, false.
+     * @brief Checks if Player B scored in the last frame.
+     * @return True if Player B scored, false otherwise.
      */
-    bool pointPaddleB() const { return mPoint == Point::B; }
+    [[nodiscard]] bool pointPaddleB() const { return mPoint == Point::B; }
 
     /**
-     * @brief Reset the ball.
+     * @brief Resets the ball's state for a new round.
      *
-     * @param position Initial position.
-     * @param speed    Initial speed.
+     * This repositions the ball and sets its initial speed and direction.
+     * @param position The new starting position.
+     * @param speed The new starting speed (X-component, Y is zero).
      */
     void reset(const glm::vec2& position, float speed);
 
     /**
-     * @brief Set up the ball.
-     *
-     * @param table   Identifier of the table.
-     * @param paddleA Identifier of the paddle A.
-     * @param paddleB Identifier of the paddle B.
+     * @brief Links the ball to its external gameplay dependencies.
+     * @param table A reference to the game table.
+     * @param paddleA A reference to paddle A.
+     * @param paddleB A reference to paddle B.
      */
-    void setup(int table, int paddleA, int paddleB);
+    void setup(const Table& table, const Paddle& paddleA, const Paddle& paddleB);
 
     void handle(const Event& event) override;
 
-    void update(float dt) override;
+    void update(Seconds dt) override;
 
-    void draw(float dt, float interp, Renderer& renderer) override;
+    void draw(Renderer& renderer, float interp) override;
 
 private:
 
-    /** @brief Position. */
+    /** @brief Checks for and resolves collisions with the top and bottom walls. */
+    void checkWallCollisions();
+
+    /** @brief Checks if the ball has passed the left or right boundaries, triggering a score. */
+    void checkScore();
+
+    /** @brief Checks for and resolves collisions with both paddles, calculating new bounce physics. */
+    void checkPaddleCollisions();
+
+public:
+
+    /**
+     * @brief Checks if a ball collides with a paddle.
+     *
+     * @param ball Ball.
+     * @param paddle Paddle.
+     * @param where Point where the collision happens.
+     *
+     * @return True if the ball and the paddle collide, false otherwise.
+     */
+    static bool collision(const Ball& ball, const Paddle& paddle, glm::vec2& where);
+
+private:
+
+    /** @brief Current center position of the ball. */
     glm::vec2 mPosition;
 
-    /** @brief Previous position. */
+    /** @brief Position in the previous frame, for interpolation. */
     glm::vec2 mPositionPrev;
 
     /** @brief Radius (size). */
     float mRadius = 1.0f;
 
-    /** @brief Speed. */
+    /** @brief The current velocity vector of the ball. */
     glm::vec2 mSpeed;
 
-    /** @brief Point type. */
+    /** @brief The scoring state from the last update. */
     Point mPoint = Point::None;
 
     /** @brief Identifier of the table. */
-    int mTable = -1;
+    const Table* mTable = nullptr;
 
     /** @brief Identifier of the paddle A. */
-    int mPaddleA = -1;
+    const Paddle* mPaddleA = nullptr;
 
     /** @brief Identifier of the paddle B. */
-    int mPaddleB = -1;
+    const Paddle* mPaddleB = nullptr;
 
     /** @brief Flag indicating if there was a collision or not. */
-    bool mCollision = false;
+    bool mCollisionOccurred = false;
 };
-
-////////////////////////////////////////////////////////////
 
 } // namespace pong
