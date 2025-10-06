@@ -211,7 +211,6 @@ bool createQuadVBO(GLuint* id)
     glGenBuffers(1, id);
     glBindBuffer(GL_ARRAY_BUFFER, *id);
     // Update the data.
-    //glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), data::QuadVertices.data(), GL_STATIC_DRAW);
     glBufferData(GL_ARRAY_BUFFER, RendererGL3::VerticesPerBatch * sizeof(RendererGL3::QuadVertex), nullptr, GL_DYNAMIC_DRAW);
     // Unbind.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
