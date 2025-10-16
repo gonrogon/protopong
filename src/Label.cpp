@@ -108,7 +108,7 @@ void Label::updateGeometry()
                 if (auto span = data::font::getGlyph(codepoint); !span.empty()) {
                     const float advance = ox + mWidth * static_cast<float>(n);
 
-                    for (int i = 2; i < span.size(); i += 4)
+                    for (std::size_t i = 2; i < span.size(); i += 4)
                     {
                         glm::vec2 pos(static_cast<float>(span[i]),     static_cast<float>(span[i + 1]));
                         glm::vec2 sca(static_cast<float>(span[i + 2]), static_cast<float>(span[i + 3]));

@@ -189,7 +189,7 @@ void RendererGL3::queueQuad(const glm::vec2& position, const glm::vec2& size)
 
 void RendererGL3::queueQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 {
-    for (int i = 0; i < data::QuadVertices.size(); i += 2)
+    for (std::size_t i = 0; i < data::QuadVertices.size(); i += 2)
     {
         mQuads.emplace_back(
             data::QuadVertices[i]     * size.x + position.x,
