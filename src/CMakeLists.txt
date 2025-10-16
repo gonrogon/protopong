@@ -58,7 +58,7 @@ target_link_libraries(protopong
         $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
         $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 		glad
-		glm
+		glm::glm-header-only
 		utf8d
 )
 # Install.

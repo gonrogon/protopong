@@ -5,4 +5,5 @@ cmake-build*
 build*
 # Project configuration header.
 src/Project.hpp
-
+# Project installation folder for testing
+install/
