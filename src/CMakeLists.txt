@@ -55,8 +55,8 @@ target_link_options(protopong
 target_link_libraries(protopong
 	PRIVATE      
 		OpenGL::GL
-		SDL2::SDL2
-		$<$<BOOL:WIN32>:SDL2main>
+        $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+        $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 		glad
 		glm
 		utf8d
@@ -65,5 +65,31 @@ target_link_libraries(protopong
 install(TARGETS protopong
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
 )
+# Install dependencies.
+if (WIN32)
+    set(SDL2_REAL_TARGET "SDL2::SDL2")
+    if (TARGET SDL2::SDL2)
+        # If SDL2::SDL2 is an alias, ALIASET_TARGET will be set with name of the real target, otherwise it will be left empty.
+        get_target_property(ALIASED_TARGET SDL2::SDL2 ALIASED_TARGET)
+        if (ALIASED_TARGET)
+            set(SDL2_REAL_TARGET ${ALIASED_TARGET})
+        endif()
+    endif()
+
+    install(IMPORTED_RUNTIME_ARTIFACTS
+        ${SDL2_REAL_TARGET}
+	    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
+    )
+
+    add_custom_command(
+        TARGET protopong POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:${SDL2_REAL_TARGET}>"
+            "$<TARGET_FILE_DIR:protopong>"
+        VERBATIM
+    )
+endif()
+
+

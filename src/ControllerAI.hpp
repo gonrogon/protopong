@@ -44,7 +44,7 @@ public:
     enum class Side { Left, Right };
 
     /** @brief How often the AI re-evaluates its target, in seconds. Lower is harder. */
-    constexpr static float TargetUpdateInterval = 0.3f;
+    constexpr static Seconds TargetUpdateInterval = std::chrono::milliseconds(300);
 
     /** @brief The distance from the target at which the paddle stops moving. Prevents oscillation. */
     constexpr static float TargetDeadZone = 1.0f;
@@ -72,7 +72,7 @@ public:
      */
     void handle(const Event& event) override {}
 
-    void update(Paddle& paddle, const Table& table, const Ball& ball, float dt) override;
+    void update(Paddle& paddle, const Table& table, const Ball& ball, Seconds dt) override;
 
 private:
     /**
@@ -104,7 +104,7 @@ private:
      * @brief Time elapsed since the last update of the target, it is used to control how often the target is
      * recalculated.
      */
-    float mTimeSinceTargetUpdate = 0.0f;
+    Seconds mTimeSinceTargetUpdate = {};
 };
 
 } // namespace pong

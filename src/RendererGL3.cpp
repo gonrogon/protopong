@@ -171,7 +171,7 @@ void RendererGL3::endFrame()
         const std::size_t count = std::min(vertices - offset, VerticesPerBatch);
         // Update the buffer and draw.
         glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(QuadVertex), mQuads.data() + offset);
-        glDrawArrays(GL_TRIANGLES, 0, count);
+        glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(count));
         // Move the offset.
         offset += count;
     }

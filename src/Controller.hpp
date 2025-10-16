@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include "RealTimeClock.hpp"
+
 namespace pong {
 
 class Paddle;
@@ -41,6 +43,11 @@ class Event;
 class Controller
 {
 public:
+
+    /**
+     * @brief A type alias for a time duration, representing seconds as a floating-point value.
+     */
+    using Seconds = RealTimeClock::Duration;
 
     Controller() = default;
 
@@ -72,7 +79,7 @@ public:
      * @param ball A constant reference to the ball.
      * @param dt The time elapsed since the last update frame (delta time) in seconds.
      */
-    virtual void update(Paddle& paddle, const Table& table, const Ball& ball, float dt) = 0;
+    virtual void update(Paddle& paddle, const Table& table, const Ball& ball, Seconds dt) = 0;
 };
 
 } // namespace pong

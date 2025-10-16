@@ -34,6 +34,7 @@
 #include <iostream>
 #include <cstring>
 #include <cassert>
+#include <thread>
 
 namespace pong {
 
@@ -225,7 +226,7 @@ void App::exec()
                 const RealTimeClock::Duration delay = std::min(tickTime - tickAccum, drawTime - drawAccum) - RTC.elapsed();
                 if (delay > RealTimeClock::Duration::zero())
                 {
-                    SDL_Delay(std::chrono::duration_cast<std::chrono::milliseconds>(delay).count());
+                    std::this_thread::sleep_for(delay);
                 }
             }
         }

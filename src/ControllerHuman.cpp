@@ -70,7 +70,7 @@ void ControllerHuman::handle(const Event& event)
 }
 
 void ControllerHuman::update
-    (Paddle& paddle, [[maybe_unused]] const Table& table, [[maybe_unused]] const Ball& ball, [[maybe_unused]] const float dt)
+    (Paddle& paddle, [[maybe_unused]] const Table& table, [[maybe_unused]] const Ball& ball, [[maybe_unused]] const Seconds dt)
 {
     if (mMoveDirection > 0)
     {

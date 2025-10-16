@@ -80,7 +80,7 @@ void Paddle::handle(const Event& event)
 
 void Paddle::update(const Seconds dt)
 {
-    mController->update(*this, *mTable, *mBall, dt.count());
+    mController->update(*this, *mTable, *mBall, dt);
 
     mPositionPrev = mPosition;
     mPosition     = mPosition + glm::vec2(0.0f, mSpeed * dt.count());

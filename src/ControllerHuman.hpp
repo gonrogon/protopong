@@ -51,7 +51,7 @@ public:
 
     void handle(const Event& event) override;
 
-    void update(Paddle& paddle, const Table& table, const Ball& ball, float dt) override;
+    void update(Paddle& paddle, const Table& table, const Ball& ball, Seconds dt) override;
 
 private:
 
