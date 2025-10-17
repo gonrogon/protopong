@@ -1,9 +1,8 @@
 # IDE files.
 **/.idea
-# Build directories.
+# Build and test install directories.
 cmake-build*
 build*
+install*
 # Project configuration header.
 src/Project.hpp
-# Project installation folder for testing
-install/

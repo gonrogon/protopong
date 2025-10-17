@@ -2,28 +2,63 @@
 find_package(OpenGL REQUIRED)
 # Configuration.
 configure_file("Project.hpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/Project.hpp")
-# Sources.
-set(PONG_SOURCES
+# Sources, create a single list of all source and header files. This approach allows for easily copy-pasting the
+# file list from an IDE.
+set(PONG_FILES
     "App.cpp"
+    "App.hpp"
     "Audio.cpp"
+    "Audio.hpp"
     "Ball.cpp"
-    "Main.cpp"
+    "Ball.hpp"
+    "Controller.hpp"
     "ControllerAI.cpp"
+    "ControllerAI.hpp"
     "ControllerHuman.cpp"
+    "ControllerHuman.hpp"
+    "Entity.hpp"
     "Event.cpp"
+    "Event.hpp"
     "Game.cpp"
+    "Game.hpp"
     "Label.cpp"
+    "Label.hpp"
+    "Main.cpp"
     "Paddle.cpp"
+    "Paddle.hpp"
+    "Project.hpp"
     "RealTimeClock.cpp"
+    "RealTimeClock.hpp"
     "RendererGL3.cpp"
+    "RendererGL3.hpp"
+    "RendererGL3Util.hpp"
     "Scene.cpp"
+    "Scene.hpp"
     "Table.cpp"
+    "Table.hpp"
     "data/Char.cpp"
+    "data/Char.hpp"
+    "data/Shader.hpp"
+    "data/Sound.hpp"
 )
+# Filter the master list into separate lists for sources and headers.
+set(PONG_HEADERS ${PONG_FILES})
+set(PONG_SOURCES ${PONG_FILES})
+list(FILTER PONG_HEADERS INCLUDE REGEX "\.hpp$")
+list(FILTER PONG_SOURCES INCLUDE REGEX "\.cpp$")
 # Add the executable.
 add_executable(protopong WIN32)
 # Sources
-target_sources(protopong PRIVATE ${PONG_SOURCES})
+target_sources(protopong
+    PRIVATE
+        ${PONG_SOURCES}
+    PRIVATE
+        FILE_SET headers TYPE HEADERS
+        BASE_DIRS
+            ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES
+            ${PONG_HEADERS}
+)
 # Properties
 target_compile_features(protopong PUBLIC cxx_std_20)
 # Includes.
