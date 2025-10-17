@@ -106,7 +106,7 @@ install(TARGETS protopong
 if (WIN32)
     set(SDL2_REAL_TARGET "SDL2::SDL2")
     if (TARGET SDL2::SDL2)
-        # If SDL2::SDL2 is an alias, ALIASET_TARGET will be set with name of the real target, otherwise it will be left empty.
+        # If SDL2::SDL2 is an alias, ALIASED_TARGET will be set with name of the real target, otherwise it will be left empty.
         get_target_property(ALIASED_TARGET SDL2::SDL2 ALIASED_TARGET)
         if (ALIASED_TARGET)
             set(SDL2_REAL_TARGET ${ALIASED_TARGET})
@@ -126,5 +126,3 @@ if (WIN32)
         VERBATIM
     )
 endif()
-
-
