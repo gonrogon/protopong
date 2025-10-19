@@ -49,7 +49,7 @@ void Scene::clear()
     mEntities.clear();
 }
 
-void Scene::update(const RealTimeClock::Duration dt)
+void Scene::update(const TimeDuration dt)
 {
     for (auto& ptr : mEntities)
     {

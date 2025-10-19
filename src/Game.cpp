@@ -166,7 +166,7 @@ void Game::handle(const Event& event)
     }
 }
 
-void Game::update(const RealTimeClock::Duration dt)
+void Game::update(const TimeDuration dt)
 {
     // The initial state changes automatically to main.
     if (mState == State::Start)

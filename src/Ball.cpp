@@ -84,7 +84,7 @@ void Ball::handle(const Event& event)
     }
 }
 
-void Ball::update(const Seconds dt)
+void Ball::update(const TimeDuration dt)
 {
     if (!mTable || !mPaddleA || !mPaddleB)
     {

@@ -78,7 +78,7 @@ void Paddle::handle(const Event& event)
     }
 }
 
-void Paddle::update(const Seconds dt)
+void Paddle::update(const TimeDuration dt)
 {
     mController->update(*this, *mTable, *mBall, dt);
 

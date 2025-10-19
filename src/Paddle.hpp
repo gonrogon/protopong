@@ -103,7 +103,7 @@ public:
 
     void handle(const Event& event) override;
 
-    void update(Seconds dt) override;
+    void update(TimeDuration dt) override;
 
     void draw(Renderer& renderer, float interp) override;
 

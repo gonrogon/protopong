@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "RealTimeClock.hpp"
+#include "Time.hpp"
 #include <memory>
 #include <vector>
 
@@ -104,7 +104,7 @@ public:
      * @brief Updates the state of all entities in the scene.
      * @param dt The time elapsed since the last update frame (delta time).
      */
-    void update(RealTimeClock::Duration dt);
+    void update(TimeDuration dt);
 
     /**
      * @brief Draws all entities in the scene.

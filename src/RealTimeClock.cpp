@@ -28,12 +28,12 @@ namespace pong {
 
 RealTimeClock::RealTimeClock() noexcept : mStart(Clock::now()) {}
 
-RealTimeClock::Duration RealTimeClock::elapsed() const noexcept
+TimeDuration RealTimeClock::elapsed() const noexcept
 {
     return Clock::now() - mStart;
 }
 
-RealTimeClock::Duration RealTimeClock::restart() noexcept
+TimeDuration RealTimeClock::restart() noexcept
 {
     const auto now     = Clock::now();
     const auto elapsed = now - mStart;

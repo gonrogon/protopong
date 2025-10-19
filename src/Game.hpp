@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include "RealTimeClock.hpp"
 #include "Scene.hpp"
 #include <glm/glm.hpp>
 
@@ -123,7 +122,7 @@ public:
      * This drives the active scene's update loop and handles game logic like scoring.
      * @param dt The time elapsed since the last update (delta time).
      */
-    void update(RealTimeClock::Duration dt);
+    void update(TimeDuration dt);
 
     /**
      * @brief Draws the current game state to the screen.

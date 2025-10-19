@@ -30,7 +30,7 @@
 
 namespace pong {
 
-void ControllerAI::update(Paddle& paddle, const Table& table, const Ball& ball, const Seconds dt)
+void ControllerAI::update(Paddle& paddle, const Table& table, const Ball& ball, const TimeDuration dt)
 {
     // On the very first update, set the initial target to the table's center.
     if (mFirst)
@@ -43,7 +43,7 @@ void ControllerAI::update(Paddle& paddle, const Table& table, const Ball& ball, 
     // If enough time has elapsed since the last update, the target is recalculated.
     if (mTimeSinceTargetUpdate > TargetUpdateInterval)
     {
-        mTimeSinceTargetUpdate = Seconds::zero();
+        mTimeSinceTargetUpdate = TimeDuration::zero();
         updateTarget(paddle, table, ball);
     }
     // Move the paddle towards the current target in every frame.

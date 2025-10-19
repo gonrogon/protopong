@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "RealTimeClock.hpp"
+#include "Time.hpp"
 
 namespace pong {
 
@@ -42,11 +42,6 @@ class Event;
 class Entity
 {
 public:
-
-    /**
-     * @brief A type alias for a time duration, representing seconds as a floating-point value.
-     */
-    using Seconds = RealTimeClock::Duration;
 
     /**
      * @brief Define an enumeration with the specific type of entity.
@@ -93,13 +88,6 @@ public:
     [[nodiscard]] Scene* scene() const noexcept { return mScene; }
 
     /**
-     * @brief Set the scene that contains this entity.
-     *
-     * This method is called by the scene when an entity is inserted.
-     *
-     * @param scene Scene to set.
-     */
-    /**
      * @brief Sets the scene that contains this entity.
      * @details This method is typically called by the `Scene` class itself when an entity is added to or removed from
      * it.
@@ -122,7 +110,7 @@ public:
      * their behavior.
      * @param dt The time elapsed since the last update frame (delta time).
      */
-    virtual void update(const Seconds dt) {}
+    virtual void update(const TimeDuration dt) {}
 
     /**
      * @brief Draws the entity to the screen.

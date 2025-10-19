@@ -161,10 +161,10 @@ void App::exec()
           bool done  = false;
     const bool vsync = enableVSync();
 
-    const RealTimeClock::Duration tickTime{1.0 / 60.0};
-    const RealTimeClock::Duration drawTime{1.0 / 60.0};
-    RealTimeClock::Duration tickAccum{};
-    RealTimeClock::Duration drawAccum{};
+    const TimeDuration tickTime{1.0 / 60.0};
+    const TimeDuration drawTime{1.0 / 60.0};
+    TimeDuration tickAccum{};
+    TimeDuration drawAccum{};
 
     RealTimeClock RTC;
 
@@ -172,7 +172,7 @@ void App::exec()
     {
         handleEvents();
         // Get the time elapsed since the last iteration.
-        RealTimeClock::Duration elapsed = RTC.restart();
+        TimeDuration elapsed = RTC.restart();
         // Clamp the time elapsed to avoid the spiral of death.
         if (elapsed > tickTime * 4)
         {
@@ -190,7 +190,7 @@ void App::exec()
                              (mEvents.pop  ());
             }
             // Update the game and check if it has finished.
-                   mGame->update(RealTimeClock::Duration(tickTime));
+                   mGame->update(TimeDuration(tickTime));
             done = mGame->done();
         }
         // Draw.
@@ -223,8 +223,8 @@ void App::exec()
                  *    safely cast to milliseconds as required by the SDL API. If the delay is zero or negative, it means
                  *    we are already running late (a "frame drop"), and no delay is performed.
                  */
-                const RealTimeClock::Duration delay = std::min(tickTime - tickAccum, drawTime - drawAccum) - RTC.elapsed();
-                if (delay > RealTimeClock::Duration::zero())
+                const TimeDuration delay = std::min(tickTime - tickAccum, drawTime - drawAccum) - RTC.elapsed();
+                if (delay > TimeDuration::zero())
                 {
                     std::this_thread::sleep_for(delay);
                 }

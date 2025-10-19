@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <chrono>
+#include "Time.hpp"
 
 namespace pong {
 
@@ -41,8 +41,6 @@ public:
 
     using TimePoint = std::chrono::time_point<Clock>;
 
-    using Duration = std::chrono::duration<double>;
-
     /**
      * @brief Constructor.
      *
@@ -57,13 +55,13 @@ public:
     /**
      * @return Time duration elapsed since the clock was started or last restarted.
      */
-    [[nodiscard]] Duration elapsed() const noexcept;
+    [[nodiscard]] TimeDuration elapsed() const noexcept;
 
     /**
      * @brief Restarts the clock.
      * @return The duration that had elapsed before the restart.
      */
-    Duration restart() noexcept;
+    TimeDuration restart() noexcept;
 
 private:
 
