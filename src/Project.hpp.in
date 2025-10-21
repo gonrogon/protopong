@@ -28,6 +28,3 @@
 #define PONG_VERSION_MINOR (@protopong_VERSION_MINOR@)
 #define PONG_VERSION_PATCH (@protopong_VERSION_PATCH@)
 #define PONG_VERSION       "@protopong_VERSION@"
-
-////////////////////////////////////////////////////////////
-
