@@ -9,8 +9,6 @@ This project is a complete modernization of an older personal project from 2016,
 serves as a practical demonstration of modern C++20 features and robust software design patterns in the context of a
 real-time application.
 
----
-
 ## Screenshots
 
 <img src="docs/screenshot_menu.jpg?raw=true" alt="Main Menu Screenshot" width="45%"> <img src="docs/screenshot_game.jpg?raw=true" alt="Gameplay Screenshot" width="45%">
