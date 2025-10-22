@@ -96,6 +96,28 @@ public:
     int append(std::unique_ptr<Entity> entity);
 
     /**
+     * @brief Emplaces a new entity into the scene, constructing it in-place.
+     * @details This is a convenience factory method that constructs a new entity of type `T` in-place and adds it to
+     * the scene. It simplifies object creation and addition into a single, safe operation, mirroring the behavior of
+     * container methods like `emplace_back`.
+     * @tparam T The concrete `Entity` type to create (e.g., `Label`, `Matrix`).
+     * @tparam Args The types of the arguments to forward to the constructor.
+     * @param args The arguments for the constructor.
+     * @return A non-owning raw pointer to the newly created entity on success, null on failure.
+     */
+    template<typename T, typename... Args> requires std::derived_from<T, Entity>
+    T* emplace(Args&&... args)
+    {
+        const int index = append(std::make_unique<T>(std::forward<Args>(args)...));
+        if (index < 0)
+        {
+            return nullptr;
+        }
+
+        return &static_cast<T&>(at(index));
+    }
+
+    /**
      * @brief Removes all entities from the scene.
      */
     void clear();
