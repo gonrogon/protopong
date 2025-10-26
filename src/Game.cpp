@@ -215,7 +215,7 @@ void Game::setupMain()
     mSceneMenus.emplace<Label>( 5.0f, glm::vec2{0.0f, -35.0f}, ColorWhite, "Press (2) for player vs player");
     mSceneMenus.emplace<Label>( 5.0f, glm::vec2{0.0f, -50.0f}, ColorWhite, "Press (h) to view controls");
     mSceneMenus.emplace<Label>( 5.0f, glm::vec2{0.0f, -65.0f}, ColorWhite, "Press (ESC) to exit");
-    mSceneMenus.emplace<Label>( 5.0f, glm::vec2{0.0f, -90.0f}, ColorWhite, PONG_VERSION);
+    mSceneMenus.emplace<Label>( 5.0f, glm::vec2{0.0f, -90.0f}, ColorGray,  PONG_VERSION);
 }
 
 void Game::setupMatch(const int players)
