@@ -32,8 +32,6 @@
 #include <glad/gl.h>
 #include <SDL.h>
 #include <iostream>
-#include <cstring>
-#include <cassert>
 #include <thread>
 
 namespace pong {
@@ -74,8 +72,6 @@ std::unique_ptr<App> App::create(const int argc, char** argv)
 
 App::App() = default;
 
-////////////////////////////////////////////////////////////
-
 App::~App()
 {
     mGame     = {};
@@ -86,8 +82,6 @@ App::~App()
 
     SDL_Quit();
 }
-
-////////////////////////////////////////////////////////////
 
 bool App::init(const int argc, char** argv)
 {
@@ -107,7 +101,7 @@ bool App::init(const int argc, char** argv)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     // Set the flags for the window and enable full screen if it is not in debug mode.
-    if (argc > 1 && std::strncmp(argv[1], "--debug", 7) == 0)
+    if (argc > 1 && std::string_view(argv[1]) == "--debug")
     {
         flags = SDL_WINDOW_OPENGL;
     }
@@ -144,17 +138,13 @@ bool App::init(const int argc, char** argv)
     {
         std::cerr << "Unable to initialize the audio system" << std::endl;
     }
-    // Initiate random numbers.
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
     // Initiate the game.
     mGame = std::make_unique<Game>(*mAudio);
     // Wait to ensure the window is ready.
-    SDL_Delay(500);
-    // Everything is fine, :)
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    // Everything is fine, :-)
     return true;
 }
-
-////////////////////////////////////////////////////////////
 
 void App::exec()
 {
@@ -187,10 +177,10 @@ void App::exec()
             while (!mEvents.empty())
             {
                 mGame->handle(mEvents.front());
-                             (mEvents.pop  ());
+                mEvents.pop();
             }
             // Update the game and check if it has finished.
-                   mGame->update(TimeDuration(tickTime));
+                   mGame->update(tickTime);
             done = mGame->done();
         }
         // Draw.
@@ -219,9 +209,8 @@ void App::exec()
                  *    work (like drawing) within the current frame. This ensures the delay calculation is accurate, and
                  *    we don't oversleep.
                  * 4. Sleep: If the resulting `delay` is a positive duration, it means we have spare time. The thread
-                 *    is put to sleep using `SDL_Delay`, yielding the CPU to the operating system. The duration is
-                 *    safely cast to milliseconds as required by the SDL API. If the delay is zero or negative, it means
-                 *    we are already running late (a "frame drop"), and no delay is performed.
+                 *    is put to sleep, yielding the CPU to the operating system. If the delay is zero or negative, it
+                 *    means we are already running late (a "frame drop"), and no delay is performed.
                  */
                 const TimeDuration delay = std::min(tickTime - tickAccum, drawTime - drawAccum) - RTC.elapsed();
                 if (delay > TimeDuration::zero())
