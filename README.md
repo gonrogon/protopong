@@ -82,14 +82,13 @@ You will need the following tools to compile the project:
 
 #### Windows (via IDE - Recommended for Debugging)
 
-This project is configured with a `CMakePresets.json` file to provide a simple, one-click setup in an IDE that supports presets (Visual Studio 2022, VS Code with the CMake Tools extension, CLion).
+This project is configured with a `CMakePresets.json` file to provide a simple, one-click setup in an IDE that supports
+presets (Visual Studio 2022, VS Code with the CMake Tools extension, CLion).
 
 1.  **Clone the repository.**
 2.  **Open the project folder** in your IDE.
-3.  The IDE should automatically detect the `CMakePresets.json` file. **Select the `windows-vs` configure 
-    preset.**
+3.  The IDE should automatically detect the `CMakePresets.json` file. **Select the `windows-vs` configure preset.**
 4.  **Build and Run** the `protopong` target from your IDE. CMake and vcpkg will handle the rest.
-
 
 #### Windows (via Command-Line)
 
